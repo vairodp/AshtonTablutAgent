@@ -8,7 +8,7 @@ import os
 
 from agent import MctsAgent
 from client import Client
-from const import settings, Turn, Pawn
+from const import Settings, Turn, Pawn
 from utils import write_string, read_string
 from player import RandomPlayer, AgentPlayer
 from ashtonmapper import AshtonMapper

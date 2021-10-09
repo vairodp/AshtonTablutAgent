@@ -70,14 +70,15 @@ class AshtonTablutGame(Game):
         new_state = state.clone()
         new_state.previous_states[hash(state)] += 1
 
-        self._move(new_state, action)
+        self._move_pawn(new_state, action)
         AshtonCaptureRules.remove_captured(new_state, action)
 
+        new_state.action_history.append(action)
         new_state.turn = Player.next(new_state.turn)
 
         return new_state
 
-    def _move(self, state, action: Action):
+    def _move_pawn(self, state, action: Action):
         from_pawn = state.pawn(action.from_)
         to_pawn = Pawn.THRONE if action.from_ == Coords.E5 else Pawn.EMPTY
 
@@ -105,13 +106,6 @@ class AshtonTablutGame(Game):
         ((row, col),) = state.board.pawn_cells(Pawn.KING)
         return row == 0 or row == state.board.shape[0] - 1 \
                or col == 0 or col == state.board.shape[1] - 1
-        # top = state.board[0, :]
-        # bottom = state.board[state.board.shape[0] - 1, :]
-        # left = state.board[:, 0]
-        # right = state.board[:, state.board.shape[1] - 1]
-        #
-        # return np.any(top == Pawn.KING) or np.any(bottom == Pawn.KING) \
-        #        or np.any(left == Pawn.KING) or np.any(right == Pawn.KING)
 
     def _is_a_draw(self, state: TablutState) -> bool:
         repeated_moves = state.previous_states[hash(state)]

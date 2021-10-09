@@ -1,3 +1,5 @@
+import copy
+
 from game import Action
 from dataclasses import dataclass
 
@@ -21,6 +23,14 @@ class Coord(tuple):
 
     def __str__(self):
         return chr(self.column + 97).upper() + str(self.row + 1)
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls, *self)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            setattr(result, k, copy.deepcopy(v, memo))
+        return result
 
     @staticmethod
     def from_str(coord: str):

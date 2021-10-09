@@ -1,3 +1,0 @@
-BLACK_WIN = 0
-WHITE_WIN = 1
-DRAW = 2

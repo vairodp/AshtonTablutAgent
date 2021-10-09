@@ -1,35 +1,33 @@
-class __Player:
+class Player(int):
     BLACK = 0
     WHITE = 1
 
-    def next(self, value):
+    @staticmethod
+    def next(value):
         return (value + 1) % 2
 
-    def previous(self, value):
+    @staticmethod
+    def previous(value):
         return (value - 1) % 2
 
 
-Player = __Player()
-
-
-class __Pawn:
+class Pawn(int):
     WHITE = Player.WHITE
     BLACK = Player.BLACK
     EMPTY = -1
     THRONE = 10
     KING = 100
 
-    def is_white(self, pawn):
-        return pawn == self.WHITE or pawn == self.KING
+    @staticmethod
+    def is_white(pawn):
+        return pawn == Pawn.WHITE or pawn == Pawn.KING
 
-    def player(self, pawn) -> Player:
-        if pawn == self.BLACK:
+    @staticmethod
+    def player(pawn) -> Player:
+        if pawn == Pawn.BLACK:
             return Player.BLACK
 
-        if self.is_white(pawn):
+        if Pawn.is_white(pawn):
             return Player.WHITE
 
         return None
-
-
-Pawn = __Pawn()

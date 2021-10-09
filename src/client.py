@@ -1,7 +1,7 @@
 import socket
 import json
 
-from const import settings, Turn, Pawn
+from const import Settings, Turn, Pawn
 from protocol import *
 from utils import write_string, read_string
 from player import Player
@@ -19,7 +19,7 @@ class Client:
         self.player = player
         self.mapper = mapper
 
-        port = settings.WHITE_PORT if player.team == Turn.WHITE else settings.BLACK_PORT
+        port = Settings.WHITE_PORT if player.team == Turn.WHITE else Settings.BLACK_PORT
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._socket.connect((ip, port))
 

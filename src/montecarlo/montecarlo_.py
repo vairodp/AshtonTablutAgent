@@ -23,10 +23,11 @@ class MonteCarlo:
         self._win_score = win_score
         self._draw_score = draw_score
         self._nodes: dict[int, MonteCarloNode] = {}
+        self._root_node: MonteCarloNode = None
 
     def stats(self, state: State) -> MonteCarloStats:
         """Return MCTS statistics for this node and children nodes."""
-        node: MonteCarloNode = self._nodes[hash(state)]
+        node: MonteCarloNode = self._nodes[state.history_hash()]
         stats = MonteCarloStats(node.n_simulations, node.win_score)
 
         for child in node.children.values():
@@ -42,32 +43,38 @@ class MonteCarlo:
         """If state does not exist, create dangling node.
         \n@param {State} state - The state to make a dangling node for; its parent is set to null."""
 
-        if hash(state) not in self._nodes:
+        action_history = state.history_hash()
+        if action_history not in self._nodes:
             unexpanded_actions = self._game.legal_actions(state).copy()
             node = MonteCarloNode(None, None, state, unexpanded_actions)
-            self._nodes[hash(state)] = node
+            self._nodes[action_history] = node
+
+    def update_root_node(self, action: Action, state: State):
+        action_history = state.history_hash()
+        node = self._nodes.get(action_history)
+
+        if node is None and self._root_node is not None and action in self._root_node.children:
+            logger.debug(f'Node found for action {action}')
+            child_node = self._root_node.children[action]
+            action = child_node.action
+            node = child_node.node
+
+        if node is None:
+            unexpanded_actions = self._game.legal_actions(state).copy()
+            node = MonteCarloNode(self._root_node, action, state, unexpanded_actions)
+
+        self._nodes[action_history] = node
+        self._root_node = node
 
     def best_action(self, state: State) -> Action:
         """Get the best action from available statistics."""
-        self.make_node(state)
+        node = self._nodes.get(state.history_hash())
+        if node is None:
+            raise Exception('Run search before getting best move')
 
-        node = self._nodes[hash(state)]
         # If not all children are expanded, not enough information
         if not node.is_fully_expanded():
             raise Exception("Not enough information!")
-
-
-        # best_action = None
-        # best_score = float('-inf')
-
-        # for action in node.all_actions():
-        #     child_node = node.child_node(action)
-        #     score = self._best_action_strategy.score(
-        #         child_node.win_score, child_node.n_simulations)
-        #
-        #     if score > best_score:
-        #         best_action = action
-        #         best_score = score
 
         best_action = argmax(
             lambda action: self._best_action_strategy.score(node.child_node(action)),
@@ -78,8 +85,12 @@ class MonteCarlo:
 
     def run_search(self, state: State, timeout_s: int):
         """From given state, run as many simulations as possible until the time limit (in seconds), building statistics."""
-
         self.make_node(state)
+
+        node = self._nodes[state.history_hash()]
+        unexpanded = len(node.unexpanded_actions())
+        total = len(node.all_actions())
+        logger.debug(f'Unexpanded = {unexpanded} / {total}')
 
         end = time() + timeout_s
         while time() < end:
@@ -96,31 +107,19 @@ class MonteCarlo:
 
             self._backpropagate(node, winner)
 
-        node = self._nodes[hash(state)]
+        node = self._nodes[state.history_hash()]
         unexpanded = len(node.unexpanded_actions())
         total = len(node.all_actions())
         logger.debug(f'Unexpanded = {unexpanded} / {total}')
 
     def _select(self, state: State):
         """Phase 1, Selection: Select until not fully expanded OR leaf."""
-        node = self._nodes[hash(state)]
+        node = self._nodes[state.history_hash()]
 
         while node.is_fully_expanded() and not node.is_leaf():
             best_action = argmax(
                 lambda action: node.child_node(action).score(self._score_strategy),
                 node.all_actions())
-
-            # best_score = float('-inf')
-            # best_action = None
-            #
-            # # Get the highest scoring action from the current node
-            # for action in node.all_actions():
-            #     child_node = node.child_node(action)
-            #     child_score = child_node.score(self._score_strategy)
-            #
-            #     if child_score > best_score:
-            #         best_score = child_score
-            #         best_action = action
 
             node = node.child_node(best_action)
 
@@ -136,6 +135,8 @@ class MonteCarlo:
         child_state = self._game.next_state(node.state, action)
         child_unexpanded_actions = self._game.legal_actions(child_state)
         child_node = node.expand(action, child_state, child_unexpanded_actions)
+
+        logger.debug(f'Expanding action {action}, turn = {child_state.turn}')
 
         return child_node
 
