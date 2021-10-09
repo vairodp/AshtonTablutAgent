@@ -26,3 +26,16 @@ def recvall(sock, n):
             return None
         data.extend(packet)
     return data
+
+
+def argmax(map, items):
+    max_value = float('-inf')
+    max_item = None
+
+    for item in items:
+        value = map(item)
+        if value > max_value:
+            max_value = value
+            max_item = item
+
+    return max_item

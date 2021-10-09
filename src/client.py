@@ -5,7 +5,7 @@ from const import settings, Turn, Pawn
 from protocol import *
 from utils import write_string, read_string
 from player import Player
-from mapper import Mapper
+from ashtonmapper import AshtonMapper
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ class Client:
     _state: State = None
     _socket: socket.socket = None
 
-    def __init__(self, player: Player, mapper: Mapper, ip='localhost'):
+    def __init__(self, player: Player, mapper: AshtonMapper, ip='localhost'):
         self.player = player
         self.mapper = mapper
 
@@ -30,9 +30,8 @@ class Client:
             self._update_state()
 
             if self._state.turn == self.player.team:
-                logger.info('Computing best move ...')
                 game_state = self.mapper.map_to_game_state(self._state)
-                move = self.player.get_move(game_state)
+                move = self.player.get_action(game_state)
                 action = self.mapper.map_to_protocol_action(game_state, move)
                 logger.info(f'Moving from {action.from_} to {action.to}')
                 self._send(action)
@@ -54,7 +53,7 @@ class Client:
                 elif self._state.turn == Turn.BLACK_WIN:
                     logger.info('YOU WIN!')
                     return
-                logger.info('Waiting for your opponent move ... ')
+                logger.info('Waiting for your opponent action ... ')
 
     def _send(self, obj):
         gson = json.dumps(

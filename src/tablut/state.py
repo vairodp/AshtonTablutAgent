@@ -1,18 +1,16 @@
 import copy
 import numpy as np
 from collections import Counter
-import game
-from . import Pawn, Coord
-
-Board = np.ndarray
+from game import State
+from . import Pawn, Coord, Board
 
 
-class TablutState(game.State):
+class TablutState(State):
 
-    def __init__(self, board: list[list] or np.ndarray, player_turn: int):
+    def __init__(self, board: Board, player_turn: int):
         super(TablutState, self).__init__([], player_turn)
         self.previous_states = Counter()
-        self.board: Board = np.array(board)
+        self.board: Board = board
 
     def pawn(self, coord: Coord) -> Pawn:
         """Get the pawn inside a specific box on the board."""
@@ -27,11 +25,11 @@ class TablutState(game.State):
     def clone(self):
         return copy.deepcopy(self)
 
-    def number_of(self, color: Pawn) -> int:
+    def number_of(self, pawn: Pawn) -> int:
         """Counts the number of checkers of a specific color on the board.
         \nNote: the king is not taken into account for white, it must be checked separately."""
 
-        return np.count_nonzero(self.board == color)
+        return self.board.count(pawn)
 
     def __str__(self):
         return f'turn={self.turn}, board={self.board}'

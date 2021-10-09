@@ -1,5 +1,6 @@
 from . import Action
 
+
 class ActionException(Exception):
     def __init__(self, action: Action):
         self.message = f'The format of the action is not correct: {action}'

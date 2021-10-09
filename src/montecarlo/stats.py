@@ -1,19 +1,19 @@
 from dataclasses import dataclass, field
-from game import Move
+from game import Action
 import json
 
 
 @dataclass
 class MonteCarloNodeStats:
-    move: Move
+    move: Action
     n_simulations: int = 0
-    n_wins: int = 0
+    win_score: int = 0
 
 
 @dataclass
 class MonteCarloStats:
     n_simulations: int
-    n_wins: int
+    win_score: int
     children: list[MonteCarloNodeStats] = field(default_factory=lambda: [])
 
     def to_json(self):

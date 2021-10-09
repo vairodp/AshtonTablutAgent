@@ -16,5 +16,5 @@ class Ucb1ScoreStrategy(MonteCarloScoreStrategy):
         self.bias = bias
 
     def score(self, node: montecarlo.node.MonteCarloNode) -> float:
-        return (node.n_wins / node.n_simulations) \
+        return (node.win_score / node.n_simulations) \
                + math.sqrt(self.bias * math.log(node.parent.n_simulations) / node.n_simulations)

@@ -5,11 +5,13 @@ import socket
 import json
 
 import os
+
+from agent import MctsAgent
 from client import Client
 from const import settings, Turn, Pawn
 from utils import write_string, read_string
-from player import RandomPlayer, MonteCarloPlayer
-from mapper import Mapper
+from player import RandomPlayer, AgentPlayer
+from ashtonmapper import AshtonMapper
 from tablut import AshtonTablutGame
 from utils import random_string
 import logging
@@ -51,7 +53,8 @@ if __name__ == '__main__':
     configure_logger()
 
     game = AshtonTablutGame(0, -1)
-    player = MonteCarloPlayer(player_name, player_team, game, timeout=50)
+    agent = MctsAgent(game, timeout=50)
+    player = AgentPlayer(player_name, player_team, agent)
     # player = RandomPlayer(player_name, player_team)
-    client = Client(player, Mapper())
+    client = Client(player, AshtonMapper())
     client.run()

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class Move(ABC):
+class Action(ABC):
 
     from_ = None
     to = None

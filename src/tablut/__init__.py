@@ -1,4 +1,5 @@
 from .const import Player, Pawn
 from .action import Action, Coord
+from .board import Board
 from .state import TablutState
-from .ashtontablut import AshtonTablutGame
+from .ashton.ashtontablut import AshtonTablutGame

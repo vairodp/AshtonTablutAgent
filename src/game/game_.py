@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from typing import Optional
-from . import State, Move
+from . import State, Action
 
 
 class Game(metaclass=ABCMeta):
@@ -15,12 +15,12 @@ class Game(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def legal_moves(self, state: State) -> list[Move]:
-        """"Return all the possible moves from the given state."""
+    def legal_actions(self, state: State) -> list[Action]:
+        """"Return all the possible actions from the given state."""
         pass
 
     @abstractmethod
-    def next_state(self, state: State, move: Move) -> State:
+    def next_state(self, state: State, move: Action) -> State:
         """Advance the given state and return it."""
         pass
 
@@ -34,6 +34,6 @@ class Game(metaclass=ABCMeta):
         return (current_player - 1) % self.players
 
     @abstractmethod
-    def get_move(self, from_state: State, to_state: State) -> Optional[Move]:
-        """Return the move needed to go from one state to the following one"""
+    def get_action(self, from_state: State, to_state: State) -> Optional[Action]:
+        """Return the action needed to go from one state to the following one"""
         pass

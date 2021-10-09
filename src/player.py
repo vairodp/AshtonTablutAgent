@@ -2,8 +2,9 @@ import logging
 import random
 from abc import ABCMeta, abstractmethod
 
+from agent import Agent
 from const import Turn
-from game import Game, Move, State
+from game import Game, Action, State
 from montecarlo import MonteCarlo, Ucb1ScoreStrategy, MaxChildStrategy
 
 logger = logging.getLogger(__name__)
@@ -15,11 +16,11 @@ class Player(metaclass=ABCMeta):
         self.team = team
 
     @abstractmethod
-    def get_move(self, state: State) -> Move:
+    def get_action(self, state: State) -> Action:
         pass
 
 
-class RandomMove(Move):
+class RandomAction(Action):
     def __init__(self):
         self.from_ = random.randint(0, 8), random.randint(0, 8)
         self.to = random.randint(0, 8), random.randint(0, 8)
@@ -29,31 +30,16 @@ class RandomMove(Move):
 
 
 class RandomPlayer(Player):
-    def get_move(self, state: State) -> Move:
-        return RandomMove()
+    def get_action(self, state: State) -> Action:
+        return RandomAction()
 
 
-class MonteCarloPlayer(Player):
+class AgentPlayer(Player):
 
-    def __init__(self, name, team: Turn, game: Game, timeout=50):
+    def __init__(self, name, team: Turn, agent:Agent):
         super().__init__(name, team)
-        self._timeout = timeout
-        self._game = game
-        self._mcts = MonteCarlo(
-            game, Ucb1ScoreStrategy(), MaxChildStrategy())
-        self._previous_state: State = self._game.start()
+        self._agent = agent
 
-    def get_move(self, state: State) -> Move:
-        move = self._game.get_move(self._previous_state, state)
-        if move is not None:
-            state = self._game.next_state(self._previous_state, move)
-            logger.info(f'Opponent move: from {move.from_} to {move.to}')
-
-        self._mcts.run_search(state, self._timeout)
-        move = self._mcts.best_move(state)
-        stats = self._mcts.stats(state)
-        logger.debug(stats.to_json())
-
-        self._previous_state = self._game.next_state(state, move)
-
-        return move
+    def get_action(self, state: State) -> Action:
+        state = self._agent.update_state(state)
+        return self._agent.get_action(state)
