@@ -52,7 +52,7 @@ if __name__ == '__main__':
 
     configure_logger()
 
-    game = AshtonTablutGame(0, -1)
+    game = AshtonTablutGame(repeated_moves_allowed=0)
     agent = MctsAgent(game, timeout=50)
     player = AgentPlayer(player_name, player_team, agent)
     # player = RandomPlayer(player_name, player_team)

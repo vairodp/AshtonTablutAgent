@@ -51,24 +51,29 @@ class MonteCarlo:
         """Get the best action from available statistics."""
         self.make_node(state)
 
+        node = self._nodes[hash(state)]
         # If not all children are expanded, not enough information
-        if not self._nodes[hash(state)].is_fully_expanded():
+        if not node.is_fully_expanded():
             raise Exception("Not enough information!")
 
-        best_action = None
-        best_score = float('-inf')
 
-        node = self._nodes[hash(state)]
-        for action in node.all_actions():
-            child_node = node.child_node(action)
-            score = self._best_action_strategy.score(
-                child_node.win_score, child_node.n_simulations)
+        # best_action = None
+        # best_score = float('-inf')
 
-            if score > best_score:
-                best_action = action
-                best_score = score
+        # for action in node.all_actions():
+        #     child_node = node.child_node(action)
+        #     score = self._best_action_strategy.score(
+        #         child_node.win_score, child_node.n_simulations)
+        #
+        #     if score > best_score:
+        #         best_action = action
+        #         best_score = score
 
-        logger.debug(f'Best score = {best_score}, Best action = {best_action}')
+        best_action = argmax(
+            lambda action: self._best_action_strategy.score(node.child_node(action)),
+            node.all_actions())
+
+        logger.debug(f'Best action = {best_action}')
         return best_action
 
     def run_search(self, state: State, timeout_s: int):
