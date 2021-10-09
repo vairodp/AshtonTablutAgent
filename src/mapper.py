@@ -1,4 +1,3 @@
-import numpy as np
 import game
 import tablut
 from protocol import Action, State
@@ -34,7 +33,7 @@ class Mapper:
     def map_to_game_state(self, state: State) -> game.State:
         board = self._map_board(state.board)
         turn = self._game_turns[state.turn]
-        return tablut.TablutState([], board, turn)
+        return tablut.TablutState(board, turn)
 
     def _map_board(self, board):
         return [[self._game_pawns[cell] for cell in row] for row in board]

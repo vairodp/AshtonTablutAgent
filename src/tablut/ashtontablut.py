@@ -1,9 +1,8 @@
-from typing import Sequence
+from typing import Sequence, Optional
 
 import numpy as np
 
 from game import Game, Move
-from ringbuffer import RingBuffer
 from . import TablutState, Player, Pawn, Coord
 from .exception import *
 
@@ -45,8 +44,8 @@ class AshtonTablutGame(Game):
     _repeated_moves_allowed: int
 
     """Counter for the moves without capturing that have occurred"""
-    _moves_without_capturing: int
-    _draw_conditions: RingBuffer
+    # _moves_without_capturing: int
+    # _draw_conditions: RingBuffer
 
     _citadels: list[Coord]
 
@@ -54,12 +53,37 @@ class AshtonTablutGame(Game):
         super().__init__(players=2)
 
         self._repeated_moves_allowed = repeated_moves_allowed
-        self._moves_without_capturing = 0
 
-        self._draw_conditions = RingBuffer(cache_size)
-        self._citadels = [Coords.A5, Coords.A6, Coords.B5, Coords.D1, Coords.E1,
-                          Coords.F1, Coords.E2, Coords.I4, Coords.I5, Coords.I6,
-                          Coords.H5, Coords.D9, Coords.E9, Coords.F9, Coords.E8]
+        # self._draw_conditions = RingBuffer(cache_size)
+        self._citadels = [Coords.A4, Coords.A5, Coords.A6, Coords.B5,
+                          Coords.D1, Coords.E1, Coords.F1, Coords.E2,
+                          Coords.I4, Coords.I5, Coords.I6, Coords.H5,
+                          Coords.D9, Coords.E9, Coords.F9, Coords.E8]
+
+    def start(self) -> TablutState:
+        """Generate and return the initial game state."""
+        board = np.array([[Pawn.EMPTY] * 9] * 9)
+        for coord in self._citadels:
+            board[coord] = Pawn.BLACK
+        board[2:7, Coords.E4.column] = Pawn.WHITE
+        board[Coords.I5.row, 2:7] = Pawn.WHITE
+        board[Coords.E5] = Pawn.KING
+
+        return TablutState(board, Player.WHITE)
+
+    def get_move(self, from_state: TablutState, to_state: TablutState) -> Optional[Move]:
+        """Return the move needed to go from one state to the following one"""
+        print(from_state.turn, to_state.turn)
+        if from_state.turn == to_state.turn:
+            return None
+        coords = list(zip(*np.where(from_state.board != to_state.board)))
+        for from_coord in coords:
+            if Pawn.player(from_state.board[from_coord]) == from_state.turn:
+                for to_coord in coords:
+                    move = Action(Coord(*from_coord), Coord(*to_coord))
+                    if from_coord != to_coord and self.is_legal_move(from_state, move):
+                        return move
+        return None
 
     # TODO: indicizzare le PAWN != THRONE in modo da rendere più efficiente la ricerca
     # inoltre l'assenza di mosse disponibili costituisce vittoria / sconfitta
@@ -70,7 +94,6 @@ class AshtonTablutGame(Game):
 
         for i in range(state.board.shape[0]):
             for j in range(state.board.shape[1]):
-
                 from_ = Coord(i, j)
 
                 # if pawn color is equal of turn color
@@ -95,18 +118,22 @@ class AshtonTablutGame(Game):
 
     def next_state(self, state: TablutState, move: Action) -> TablutState:
         """Advance the given state and return it. Ensure the move is legal before."""
-        new_history = list(state.move_history)
-        new_history.append(move)
+        # new_history = list(state.move_history)
+        # new_history.append(move)
+        # new_state_history = state.previous_states.copy()
+        # new_state_history.append(hash(state))
+        #
+        # new_board = np.copy(state.board)
+        # state = TablutState(new_history, new_state_history, new_board, state.turn)
+        new_state = state.clone()
+        new_state.previous_states[hash(state)] += 1
 
-        new_board = np.copy(state.board)
-        state = TablutState(new_history, new_board, state.turn)
+        self._move(new_state, move)
+        self._remove_captured(new_state, move)
 
-        self._move(state, move)
-        self._remove_captured(state, move)
+        new_state.turn = Player.next(new_state.turn)
 
-        state.turn = Player.next(state.turn)
-
-        return state
+        return new_state
 
     def _move(self, state, action: Action):
         from_pawn = state.pawn(action.from_)
@@ -124,7 +151,7 @@ class AshtonTablutGame(Game):
             # self._remove_captured_blacks_from_white(state, action)
             self._remove_captured_simple_pawns_from(state, action, self._remove_captured_black_from_white)
 
-        self._moves_without_capturing += 1
+        # state.moves_without_capturing += 1
 
     def _remove_captured_simple_pawns_from(self, state: TablutState, action: Action, remove_simple_pawn):
         # capture on the right
@@ -185,7 +212,7 @@ class AshtonTablutGame(Game):
             if Pawn.is_white(second_pawn) or second_pawn == Pawn.THRONE \
                     or (second in self._citadels and second not in [Coords.I5, Coords.E1, Coords.A5, Coords.E9]):
                 state.remove_pawn(captured)
-                self._moves_without_capturing = -1
+                # state.moves_without_capturing = -1
 
     # def _remove_captured_whites_from_black(self, state: TablutState, action: Action):
     #     # capture on the right
@@ -221,7 +248,7 @@ class AshtonTablutGame(Game):
                 (second_pawn == Pawn.BLACK or second_pawn == Pawn.THRONE
                  or second in self._citadels or second == Coords.E5):
             state.remove_pawn(captured)
-            self._moves_without_capturing = -1
+            # state.moves_without_capturing = -1
 
     def _remove_captured_king_from_black(self, state: TablutState, action: Action):
         right = Coord(action.to.row, action.to.column + 1)
@@ -337,7 +364,7 @@ class AshtonTablutGame(Game):
                         or Coord(action.to.row - 2, action.to.column) in self._citadels:
                     state.remove_pawn(top)
 
-    def winner(self, state: TablutState) -> int:
+    def winner(self, state: TablutState) -> Optional[int]:
         """Return the winner of the game, None else."""
         turn = Player.previous(state.turn)
 
@@ -356,9 +383,9 @@ class AshtonTablutGame(Game):
 
     def _is_king_on_edge(self, state: TablutState) -> bool:
         top = state.board[0, :]
-        bottom = state.board[len(state.board) - 1, :]
+        bottom = state.board[state.board.shape[0] - 1, :]
         left = state.board[:, 0]
-        right = state.board[:, len(state.board[0]) - 1]
+        right = state.board[:, state.board.shape[1] - 1]
 
         return np.any(top == Pawn.KING) or np.any(bottom == Pawn.KING) \
                or np.any(left == Pawn.KING) or np.any(right == Pawn.KING)
@@ -370,14 +397,15 @@ class AshtonTablutGame(Game):
         # bisognerebbe prima capire come cavolo è implementata sta cosa. Scrivere al tutor magari
         # N.B. Prestare attenzione al comportamento di montecarlo.py, forse non è gestita la chiusura del nodo in caso di pareggio
 
-        return False
+        # return False
 
         # if something has been captured, clear cache for draws
-        if self._moves_without_capturing == 0:
-            self._draw_conditions.clear()
+        # if state.moves_without_capturing == 0:
+        #     self._draw_conditions.clear()
 
-        repeated_moves = self._draw_conditions.count(state)
-        self._draw_conditions.append(state.clone())
+        # subtract current move from the history
+        repeated_moves = state.previous_states[hash(state)]
+        # self._draw_conditions.append(state.clone())
 
         return repeated_moves > self._repeated_moves_allowed
 

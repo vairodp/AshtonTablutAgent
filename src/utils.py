@@ -1,3 +1,11 @@
+import random
+import string
+
+
+def random_string(length) -> str:
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+
+
 def write_string(socket, text: str):
     encoded = text.encode('utf-8')
     socket.sendall(len(encoded).to_bytes(4, byteorder='big'))

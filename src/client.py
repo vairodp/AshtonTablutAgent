@@ -32,7 +32,7 @@ class Client:
             if self._state.turn == self.player.team:
                 logger.info('Computing best move ...')
                 game_state = self.mapper.map_to_game_state(self._state)
-                move = self.player.get_movement(game_state)
+                move = self.player.get_move(game_state)
                 action = self.mapper.map_to_protocol_action(game_state, move)
                 logger.info(f'Moving from {action.from_} to {action.to}')
                 self._send(action)

@@ -1,5 +1,6 @@
 import copy
 import numpy as np
+from collections import Counter
 import game
 from . import Pawn, Coord
 
@@ -8,16 +9,17 @@ Board = np.ndarray
 
 class TablutState(game.State):
 
-    def __init__(self, move_history: list, board: list[list] or np.ndarray, player_turn: int):
-        self.board = np.array(board)
-        super(TablutState, self).__init__(move_history, player_turn)
+    def __init__(self, board: list[list] or np.ndarray, player_turn: int):
+        super(TablutState, self).__init__([], player_turn)
+        self.previous_states = Counter()
+        self.board: Board = np.array(board)
 
     def pawn(self, coord: Coord) -> Pawn:
         """Get the pawn inside a specific box on the board."""
-        return self.board[coord.row, coord.column]
+        return self.board[coord]
 
     def set_pawn(self, coord: Coord, pawn: Pawn):
-        self.board[coord.row, coord.column] = pawn
+        self.board[coord] = pawn
 
     def remove_pawn(self, coord: Coord):
         self.set_pawn(coord, Pawn.EMPTY)

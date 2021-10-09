@@ -63,7 +63,7 @@ class MonteCarlo:
                 best_move = move
                 best_score = score
         
-        logger.debug(f'Best score = {best_score}')
+        logger.debug(f'Best score = {best_score}, Best move = {best_move}')
         return best_move
 
     def run_search(self, state: State, timeout_s: int):

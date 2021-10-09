@@ -22,5 +22,14 @@ class __Pawn:
     def is_white(self, pawn):
         return pawn == self.WHITE or pawn == self.KING
 
+    def player(self, pawn) -> Player:
+        if pawn == self.BLACK:
+            return Player.BLACK
+
+        if self.is_white(pawn):
+            return Player.WHITE
+
+        return None
+
 
 Pawn = __Pawn()

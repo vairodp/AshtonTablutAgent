@@ -7,7 +7,7 @@ class Coord(tuple):
     row: int
     column: int
 
-    def __new__(cls, row:int, column: int):
+    def __new__(cls, row: int, column: int):
         return tuple.__new__(Coord, (row, column))
 
     def __eq__(self, other):
@@ -20,7 +20,7 @@ class Coord(tuple):
         return hash((self.row, self.column))
 
     def __str__(self):
-        return str((self.row, self.column))
+        return chr(self.column + 97).upper() + str(self.row + 1)
 
     @staticmethod
     def from_str(coord: str):

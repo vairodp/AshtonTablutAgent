@@ -4,12 +4,16 @@ import sys
 import socket
 import json
 
+import os
 from client import Client
 from const import settings, Turn, Pawn
 from utils import write_string, read_string
 from player import RandomPlayer, MonteCarloPlayer
 from mapper import Mapper
 from tablut import AshtonTablutGame
+from utils import random_string
+import logging
+
 
 # import argparse
 
@@ -22,16 +26,31 @@ from tablut import AshtonTablutGame
 
 # args = parser.parse_args()
 # print(args.accumulate(args.integers))
-import logging
+def configure_logger():
+    filename = random_string(10)
+    log_folder = 'logs'
+    if not os.path.exists(log_folder):
+        os.makedirs(log_folder)
+    file_handler = logging.FileHandler(f'{log_folder}/{filename}.log')
+    file_handler.setLevel(logging.DEBUG)
+    log_format = "%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s"
+    file_handler.setFormatter(logging.Formatter(log_format))
+
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(message)s', encoding='utf-8',
+                        handlers=[console_handler, file_handler])
+
 
 if __name__ == '__main__':
-
-    logging.basicConfig(filename='debug.log', format='%(asctime)s %(message)s',
-                        encoding='utf-8', level=logging.DEBUG)
-
     player_name = 'AI'
-    player_team = Turn.WHITE
-    game = AshtonTablutGame(0, 0)
+    player_team = Turn.BLACK
+
+    configure_logger()
+
+    game = AshtonTablutGame(0, -1)
     player = MonteCarloPlayer(player_name, player_team, game, timeout=50)
     # player = RandomPlayer(player_name, player_team)
     client = Client(player, Mapper())

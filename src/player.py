@@ -15,7 +15,7 @@ class Player(metaclass=ABCMeta):
         self.team = team
 
     @abstractmethod
-    def get_movement(self, state: State) -> Move:
+    def get_move(self, state: State) -> Move:
         pass
 
 
@@ -29,7 +29,7 @@ class RandomMove(Move):
 
 
 class RandomPlayer(Player):
-    def get_movement(self, state: State) -> Move:
+    def get_move(self, state: State) -> Move:
         return RandomMove()
 
 
@@ -41,13 +41,19 @@ class MonteCarloPlayer(Player):
         self._game = game
         self._mcts = MonteCarlo(
             game, Ucb1ScoreStrategy(), MaxChildStrategy())
+        self._previous_state: State = self._game.start()
 
-    def get_movement(self, state: State) -> Move:
+    def get_move(self, state: State) -> Move:
+        move = self._game.get_move(self._previous_state, state)
+        if move is not None:
+            state = self._game.next_state(self._previous_state, move)
+            logger.info(f'Opponent move: from {move.from_} to {move.to}')
+
         self._mcts.run_search(state, self._timeout)
         move = self._mcts.best_move(state)
         stats = self._mcts.stats(state)
         logger.debug(stats.to_json())
-        # state = game.nextState(state, play)
-        # winner = game.winner(state)
+
+        self._previous_state = self._game.next_state(state, move)
 
         return move
