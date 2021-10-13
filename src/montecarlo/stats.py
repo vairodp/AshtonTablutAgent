@@ -9,11 +9,17 @@ class MonteCarloNodeStats:
     n_simulations: int = 0
     win_score: int = 0
 
+    n_rave: int = 0
+    rave_score: int = 0
+
 
 @dataclass
 class MonteCarloStats:
     n_simulations: int
     win_score: int
+    n_rave: int
+    rave_score: int
+
     children: list[MonteCarloNodeStats] = field(default_factory=lambda: [])
 
     def to_json(self):

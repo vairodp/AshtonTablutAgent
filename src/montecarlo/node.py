@@ -39,6 +39,10 @@ class MonteCarloNode:
         self.n_simulations = 0
         self.win_score = 0
 
+        #Rave stuff
+        self.n_rave = 0
+        self.rave_score = 0
+
         # Tree stuff
         self.parent = parent
         self.children: MonteCarloChildren = {}
@@ -55,6 +59,9 @@ class MonteCarloNode:
             raise Exception('Child is not expanded!')
 
         return child.node
+
+    def children_nodes(self):
+        return [child.node for child in self.children.values() if child.node is not None]
 
     def expand(self, action: Action, child_state: State, child_unexpanded_moves: Sequence[Action]) -> MonteCarloNode:
         """Expand the specified child action and return the new child node.

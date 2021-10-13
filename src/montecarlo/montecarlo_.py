@@ -28,15 +28,17 @@ class MonteCarlo:
     def stats(self, state: State) -> MonteCarloStats:
         """Return MCTS statistics for this node and children nodes."""
         node: MonteCarloNode = self._nodes[state.history_hash()]
-        stats = MonteCarloStats(node.n_simulations, node.win_score)
+        stats = MonteCarloStats(node.n_simulations, node.win_score, node.n_rave, node.rave_score)
 
         for child in node.children.values():
             if child.node is None:
                 stats.children.append(
-                    MonteCarloNodeStats(child.action, 0, 0))
+                    MonteCarloNodeStats(child.action))
             else:
-                stats.children.append(MonteCarloNodeStats(
-                    child.action, child.node.n_simulations, child.node.win_score))
+                stats.children.append(
+                    MonteCarloNodeStats(child.action,
+                                        child.node.n_simulations, child.node.win_score,
+                                        child.node.n_rave, child.node.rave_score))
         return stats
 
     def make_node(self, state: State):
@@ -100,17 +102,18 @@ class MonteCarlo:
             # if the match is not closed and there are possible actions from the selected node
             if winner is None and not node.is_leaf():
                 node = self._expand(node)
-                winner = self._simulate(node)
+                final_state, winner = self._simulate(node)
 
             if winner is None:
                 raise Exception('No actions available')
 
-            self._backpropagate(node, winner)
+            self._backpropagate(node, final_state, winner)
 
         node = self._nodes[state.history_hash()]
         unexpanded = len(node.unexpanded_actions())
         total = len(node.all_actions())
         logger.debug(f'Unexpanded = {unexpanded} / {total}')
+        logger.debug(f'n_simulations {node.n_simulations}, win_score {node.win_score}')
 
     def _select(self, state: State):
         """Phase 1, Selection: Select until not fully expanded OR leaf."""
@@ -136,34 +139,68 @@ class MonteCarlo:
         child_unexpanded_actions = self._game.legal_actions(child_state)
         child_node = node.expand(action, child_state, child_unexpanded_actions)
 
-        logger.debug(f'Expanding action {action}, turn = {child_state.turn}')
+        # self._nodes[child_state.history_hash()] = child_node
+
+        # if child_state.turn == 0:
+        #     logger.debug(f'Expanding action {action}, parent = {self._nodes[node.state.history_hash()].action}, turn = {child_state.turn}')
 
         return child_node
 
-    def _simulate(self, node: MonteCarloNode, choice=random.choice) -> Optional[int]:
+    def _simulate(self, node: MonteCarloNode, default_policy=random.choice) -> (State, Optional[int]):
         """Phase 3, Simulation: Play game to terminal state using random actions, return winner."""
         state = node.state
         winner = self._game.winner(state)
 
         while winner is None:
-            action = choice(self._game.legal_actions(state))
+            action = default_policy(self._game.legal_actions(state))
             state = self._game.next_state(state, action)
             winner = self._game.winner(state)
 
-        return winner
+        return state, winner
 
-    def _backpropagate(self, node: MonteCarloNode, winner: int):
+    def _backpropagate(self, node: MonteCarloNode, final_state: State, winner: int):
         """Phase 4, Backpropagation: Update ancestor statistics."""
+        player_cells = self._player_cells(final_state)
+        previous_player = self._game.previous_player(winner)
         while node is not None:
             node.n_simulations += 1
 
             if winner == Game.DRAW:
-                node.win_score += self._draw_score
+                reward = self._draw_score
 
-            # if black wins, the win counter of each visited white node is increased, as white statistics are used for black's choice (and viceversa)
-            elif node.state.is_player_turn(self._game.previous_player(winner)):
-                node.win_score += self._win_score
+            # score of child node is used by the parent.
+            # Therefore we increment the child node score if the parent player has won
+            elif node.state.is_player_turn(previous_player):
+                reward = self._win_score
             else:
-                node.win_score -= self._win_score
+                reward = -self._win_score
+
+            node.win_score += reward
+
+            reward = -reward
+            for child_node in node.children_nodes():
+                # If the pawn moved is still in the final state and the player has won (lost), the action was good (bad)
+                # Therefore, we increase the child score
+                if tuple(child_node.action.to) in player_cells[node.state.turn]:
+                    child_node.n_rave += 1
+                    child_node.rave_score += reward
 
             node = node.parent
+
+    def _player_cells(self, state: State) -> dict[int, set]:
+        player_cells = {}
+        for player in self._game.players():
+            player_cells[player] = set(self._game.cells_of(state, player))
+
+        return player_cells
+
+# Commentare tutta sta porcheria RAVE che tanto non funziona (per ora)
+# TODO: add move priority in order to choice move in simulation phase
+# They can be summarised by applying four prioritised rules after any opponent move a:
+# 1. If a put some of our stones into atari, play a saving move at random.
+# 2. Otherwise, if one of the 8 intersections surrounding a matches a simple pattern
+# for cutting or hane, randomly play one.
+# 3. Otherwise, if any opponent stone can be captured, play a capturing move at random.
+# 4. Otherwise play a random move.
+
+# Successivamente è possibile usare supervised learning per stimare i pesi della default_policy

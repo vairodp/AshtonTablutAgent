@@ -3,7 +3,7 @@ import logging
 
 from const import Turn
 from game import Game, State, Action
-from montecarlo import MonteCarlo, Ucb1ScoreStrategy, MaxChildStrategy
+from montecarlo import MonteCarlo, RaveScoreStrategy, MaxChildStrategy
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class MctsAgent(Agent):
     def __init__(self, game: Game, timeout):
         self._timeout = timeout
         self._game = game
-        self._mcts = MonteCarlo(game, Ucb1ScoreStrategy(), MaxChildStrategy())
+        self._mcts = MonteCarlo(game, score_strategy=RaveScoreStrategy(), best_action_strategy=RaveScoreStrategy())
         self._root_state: State = self._game.start()
 
     def update_state(self, state: State) -> State:
@@ -48,7 +48,7 @@ class MctsAgent(Agent):
         self._root_state = self._game.next_state(state, best_action)
         self._mcts.update_root_node(best_action, self._root_state)
 
-        stats = self._mcts.stats(state)
-        logger.debug(stats.to_json())
+        # stats = self._mcts.stats(state)
+        # logger.debug(stats.to_json())
 
         return best_action

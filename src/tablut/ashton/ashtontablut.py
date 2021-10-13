@@ -172,3 +172,10 @@ class AshtonTablutGame(Game):
         coord = Coord(i, j)
         return state.pawn(coord) != Pawn.EMPTY or \
                (coord in state.board.citadels and action.from_ not in state.board.citadels)
+
+    def cells_of(self, state: TablutState, player: Player) -> Sequence:
+        """Return cells occupied by pawns of the given player"""
+        pawn_cells = list(state.board.pawn_cells(player))
+        if player == Player.WHITE:
+            pawn_cells.extend(state.board.pawn_cells(Pawn.KING))
+        return pawn_cells

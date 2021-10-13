@@ -46,7 +46,7 @@ def configure_logger():
                         handlers=[console_handler, file_handler])
 
 
-if __name__ == '__main__':
+def main():
     player_name = 'AI'
     player_team = Turn.BLACK
 
@@ -58,3 +58,7 @@ if __name__ == '__main__':
     # player = RandomPlayer(player_name, player_team)
     client = Client(player, AshtonMapper())
     client.run()
+
+
+if __name__ == '__main__':
+    main()

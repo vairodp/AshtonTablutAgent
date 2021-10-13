@@ -1,11 +1,11 @@
 from abc import ABCMeta, abstractmethod
-from typing import Optional
+from typing import Optional, Sequence
 from . import State, Action
 
 
 class Game(metaclass=ABCMeta):
     def __init__(self, players):
-        self.players = players
+        self.n_players = players
 
     DRAW = -1
 
@@ -31,9 +31,20 @@ class Game(metaclass=ABCMeta):
 
     def previous_player(self, current_player: int) -> int:
         """Return the previous turn player"""
-        return (current_player - 1) % self.players
+        return (current_player - 1) % self.n_players
+
+    def nex_player(self, current_player: int) -> int:
+        return (current_player + 1) % self.n_players
+
+    def players(self):
+        return range(self.n_players)
 
     @abstractmethod
     def get_action(self, from_state: State, to_state: State) -> Optional[Action]:
         """Return the action needed to go from one state to the following one"""
+        pass
+
+    @abstractmethod
+    def cells_of(self, state: State, player: int) -> Sequence:
+        """Return cells occupied by items of the given player"""
         pass
