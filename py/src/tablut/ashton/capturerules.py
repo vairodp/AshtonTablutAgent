@@ -14,7 +14,8 @@ class AshtonCaptureRules:
         elif state.turn == Player.WHITE:
             pawn_capture_function = AshtonCaptureRules._remove_captured_black_from_white
 
-        AshtonCaptureRules._remove_captured_simple_pawns_from(state, action, pawn_capture_function)
+        AshtonCaptureRules._remove_captured_simple_pawns_from(
+            state, action, pawn_capture_function)
 
         # state.moves_without_capturing += 1
 
@@ -51,7 +52,7 @@ class AshtonCaptureRules:
         second_pawn = state.pawn(second)
 
         if captured_pawn == Pawn.BLACK:
-            if Pawn.is_white(second_pawn) or second_pawn == Pawn.THRONE \
+            if Pawn.is_white(second_pawn) or second == Coords.E5 \
                     or (second in state.board.citadels and second not in [Coords.I5, Coords.E1, Coords.A5, Coords.E9]):
                 state.remove_pawn(captured)
                 # state.moves_without_capturing = -1
@@ -63,8 +64,7 @@ class AshtonCaptureRules:
         second_pawn = state.pawn(second)
 
         if captured_pawn == Pawn.WHITE and \
-                (second_pawn == Pawn.BLACK or second_pawn == Pawn.THRONE
-                 or second in state.board.citadels or second == Coords.E5):
+                (second_pawn == Pawn.BLACK or second in state.board.citadels or second == Coords.E5):
             state.remove_pawn(captured)
             # state.moves_without_capturing = -1
 
@@ -157,7 +157,7 @@ class AshtonCaptureRules:
                     state.remove_pawn(bottom)
 
         # capture on top
-        if action.to.row > 1 and state.pawn(top) == Pawn.KING:
+        elif action.to.row > 1 and state.pawn(top) == Pawn.KING:
             # re sul trono
             if top == Coords.E5:
                 if state.pawn(Coords.E4) == Pawn.BLACK and state.pawn(Coords.F5) == Pawn.BLACK and state.pawn(

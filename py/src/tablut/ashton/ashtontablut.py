@@ -48,9 +48,11 @@ class AshtonTablutGame(Game):
         for i, j in current_player_pawn_cells:
 
             top_coords = (Coord(k, j) for k in range(i - 1, -1, -1))
-            bottom_coords = (Coord(k, j) for k in range(i + 1, state.board.shape[0]))
+            bottom_coords = (Coord(k, j)
+                             for k in range(i + 1, state.board.shape[0]))
             left_coords = (Coord(i, k) for k in range(j - 1, -1, -1))
-            right_coords = (Coord(i, k) for k in range(j + 1, state.board.shape[1]))
+            right_coords = (Coord(i, k)
+                            for k in range(j + 1, state.board.shape[1]))
 
             directions = [top_coords, bottom_coords, left_coords, right_coords]
 
@@ -105,7 +107,7 @@ class AshtonTablutGame(Game):
     def _is_king_on_edge(self, state: TablutState) -> bool:
         ((row, col),) = state.board.pawn_cells(Pawn.KING)
         return row == 0 or row == state.board.shape[0] - 1 \
-               or col == 0 or col == state.board.shape[1] - 1
+            or col == 0 or col == state.board.shape[1] - 1
 
     def _is_a_draw(self, state: TablutState) -> bool:
         repeated_moves = state.previous_states[hash(state)]
@@ -146,7 +148,7 @@ class AshtonTablutGame(Game):
                 return False
 
         if state.turn == Player.BLACK:
-            if not state.pawn(action.from_) == Pawn.BLACK:
+            if state.pawn(action.from_) != Pawn.BLACK:
                 return False
 
         # controllo di non muovere in diagonale
@@ -171,7 +173,7 @@ class AshtonTablutGame(Game):
     def _is_climbing(self, state: TablutState, i: int, j: int, action: Action) -> bool:
         coord = Coord(i, j)
         return state.pawn(coord) != Pawn.EMPTY or \
-               (coord in state.board.citadels and action.from_ not in state.board.citadels)
+            (coord in state.board.citadels and action.from_ not in state.board.citadels)
 
     def cells_of(self, state: TablutState, player: Player) -> Sequence:
         """Return cells occupied by pawns of the given player"""

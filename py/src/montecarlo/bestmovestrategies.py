@@ -22,4 +22,4 @@ class RobustChildStrategy(MonteCarloBestMoveStrategy):
 
 class PLogNStrategy(MonteCarloBestMoveStrategy):
     def score(self, node: MonteCarloNode) -> float:
-        return (node.n_wins / node.n_simulations) * math.log(node.n_simulations)
+        return (node.win_score / node.n_simulations) * math.log(node.n_simulations)

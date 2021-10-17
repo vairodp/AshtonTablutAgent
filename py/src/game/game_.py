@@ -31,7 +31,7 @@ class Game(metaclass=ABCMeta):
 
     def previous_player(self, current_player: int) -> int:
         """Return the previous turn player"""
-        return (current_player - 1) % self.n_players
+        return (self.n_players + current_player - 1) % self.n_players
 
     def nex_player(self, current_player: int) -> int:
         return (current_player + 1) % self.n_players
