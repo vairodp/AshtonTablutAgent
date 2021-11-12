@@ -27,4 +27,11 @@ public class Counter<T> implements Serializable, Cloneable {
         counter.counts = new HashMap<>(counts);
         return counter;
     }
+
+    @Override
+    public String toString() {
+        return "Counter{" +
+                "counts=" + counts +
+                '}';
+    }
 }

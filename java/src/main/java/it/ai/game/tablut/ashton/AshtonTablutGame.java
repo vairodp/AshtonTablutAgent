@@ -8,7 +8,10 @@ import it.ai.game.State;
 import it.ai.game.tablut.*;
 import lombok.Getter;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -31,33 +34,20 @@ public class AshtonTablutGame implements Game {
         return new TablutState(new AshtonBoard(), Player.WHITE);
     }
 
-    /***
-     * Return all the possible actions from the given state.
-     */
-    @Override
+
+    //    /***
+//     * Return all the possible actions from the given state.
+//     */
+//    @Override
     public List<it.ai.game.Action> getValidActions(State _state) {
         TablutState state = (TablutState) _state;
         Board board = state.getBoard();
         List<it.ai.game.Action> validActions = new ArrayList<>();
 
-        Set<Coords> currentPlayerPawnCells = new HashSet<>(board.getPawnCoords(state.getTurn()));
-        if (state.getTurn() == Player.WHITE)
-            currentPlayerPawnCells.addAll(board.getPawnCoords(Pawn.KING));
+        List<Coords> currentPlayerPawnCells = getPlayerPawnCells(board, state.getTurn());
 
         for (Coords pawnCoords : currentPlayerPawnCells) {
-            Iterable<Coords> topCoords = () -> Streams.rangeInclusive(pawnCoords.getRow() - 1, 0, -1)
-                    .map(k -> new Coords(k, pawnCoords.getColumn())).iterator();
-
-            Iterable<Coords> bottomCoords = () -> Streams.range(pawnCoords.getRow() + 1, board.numberOfRows())
-                    .map(k -> new Coords(k, pawnCoords.getColumn())).iterator();
-
-            Iterable<Coords> leftCoords = () -> Streams.rangeInclusive(pawnCoords.getColumn() - 1, 0, -1)
-                    .map(k -> new Coords(pawnCoords.getRow(), k)).iterator();
-
-            Iterable<Coords> rightCoords = () -> Streams.range(pawnCoords.getColumn() + 1, board.numberOfColumns())
-                    .map(k -> new Coords(pawnCoords.getRow(), k)).iterator();
-
-            List<Iterable<Coords>> directions = List.of(topCoords, bottomCoords, leftCoords, rightCoords);
+            Iterable<Iterable<Coords>> directions = getDirectionalCoords(board, pawnCoords);
 
             for (Iterable<Coords> direction : directions) {
                 for (Coords coords : direction) {
@@ -72,6 +62,57 @@ public class AshtonTablutGame implements Game {
 
         return validActions;
     }
+
+
+    private boolean noValidActions(TablutState state) {
+        Board board = state.getBoard();
+
+        List<Coords> currentPlayerPawnCells = getPlayerPawnCells(board, state.getTurn());
+
+        for (Coords pawnCoords : currentPlayerPawnCells) {
+            Iterable<Iterable<Coords>> directions = getDirectionalCoords(board, pawnCoords);
+
+            for (Iterable<Coords> direction : directions) {
+                for (Coords coords : direction) {
+                    Action action = new Action(pawnCoords, coords);
+                    if (!isValidAction(state, action))
+                        break;
+
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private List<Coords> getPlayerPawnCells(Board board, int player) {
+        List<Coords> currentPlayerPawnCells = new ArrayList<>(board.getPawnCoords(player));
+        if (player == Player.WHITE)
+            currentPlayerPawnCells.addAll(board.getPawnCoords(Pawn.KING));
+        return currentPlayerPawnCells;
+    }
+
+    private Iterable<Iterable<Coords>> getDirectionalCoords(Board board, Coords pawnCoords) {
+        Iterable<Coords> topCoords = com.google.common.collect.Iterables.transform(
+                Iterables.rangeInclusive(pawnCoords.getRow() - 1, 0, -1),
+                k -> new Coords(k, pawnCoords.getColumn()));
+
+        Iterable<Coords> bottomCoords = com.google.common.collect.Iterables.transform(
+                Iterables.range(pawnCoords.getRow() + 1, board.numberOfRows()),
+                k -> new Coords(k, pawnCoords.getColumn()));
+
+        Iterable<Coords> leftCoords = com.google.common.collect.Iterables.transform(
+                Iterables.rangeInclusive(pawnCoords.getColumn() - 1, 0, -1),
+                k -> new Coords(pawnCoords.getRow(), k));
+
+        Iterable<Coords> rightCoords = com.google.common.collect.Iterables.transform(
+                Iterables.range(pawnCoords.getColumn() + 1, board.numberOfColumns()),
+                k -> new Coords(pawnCoords.getRow(), k));
+
+        return List.of(topCoords, bottomCoords, leftCoords, rightCoords);
+    }
+
 
     /***
      * Check if given an action, it is allowed from the current state according to the rules of game.
@@ -197,6 +238,9 @@ public class AshtonTablutGame implements Game {
         if (isADraw(state))
             return Optional.of(Game.DRAW);
 
+        if (noValidActions(state))
+            return Optional.of(nextPlayer(turn));
+
         return Optional.empty();
     }
 
@@ -210,7 +254,7 @@ public class AshtonTablutGame implements Game {
     }
 
     private boolean isADraw(TablutState state) {
-        int repeatedActions = state.getPreviousStates().get(state.hashCode());
+        int repeatedActions = state.getBoardHistory().get(state.getBoard().hashCode());
 
         return repeatedActions > repeatedActionsAllowed;
     }

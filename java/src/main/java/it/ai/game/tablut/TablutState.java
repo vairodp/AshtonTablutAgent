@@ -13,21 +13,28 @@ import java.util.stream.Stream;
 public class TablutState implements State {
 
     @Getter
-    private Board board;
+    private final Board board;
 
     @Getter
     @Setter
     private int turn;
-    private ArrayList<Integer> actionHistory;
+    private final ArrayList<Integer> actionHistory;
 
     @Getter
-    private Counter<Integer> previousStates;
+    private final Counter<Integer> boardHistory;
 
     public TablutState(Board board, int turn) {
         this.board = board;
         this.turn = turn;
         this.actionHistory = new ArrayList<>();
-        this.previousStates = new Counter<>();
+        this.boardHistory = new Counter<>();
+    }
+
+    private TablutState(Board board, int turn, ArrayList<Integer> actionHistory, Counter<Integer> boardHistory) {
+        this.board = board;
+        this.turn = turn;
+        this.actionHistory = actionHistory;
+        this.boardHistory = boardHistory;
     }
 
     @Override
@@ -47,7 +54,7 @@ public class TablutState implements State {
 
     public TablutState nextState(Action action) {
         TablutState state = clone();
-        state.previousStates.add(this.hashCode());
+        state.boardHistory.add(this.board.hashCode());
         state.actionHistory.add(action.hashCode());
 
         return state;
@@ -72,14 +79,8 @@ public class TablutState implements State {
     @SneakyThrows
     @Override
     public TablutState clone() {
-        //TODO: rivedere i metodi clone. Usare un costruttore privato e fare tutto final
-        TablutState state = (TablutState) super.clone();
-
-        state.board = board.clone();
-        state.actionHistory = (ArrayList<Integer>) actionHistory.clone();
-        state.previousStates = previousStates.clone();
-
-        return state;
+        return new TablutState(board.clone(), turn,
+                (ArrayList<Integer>) actionHistory.clone(), boardHistory.clone());
     }
 
     @Override
@@ -88,7 +89,7 @@ public class TablutState implements State {
                 "board=" + board +
                 ", turn=" + turn +
                 ", actionHistory=" + actionHistory +
-                ", previousStates=" + previousStates +
+                ", boardHistory=" + boardHistory +
                 '}';
     }
 

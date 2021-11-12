@@ -3,6 +3,7 @@ package it.ai;
 import it.ai.agents.Agent;
 import it.ai.agents.MctsAgent;
 import it.ai.client.TablutClient;
+import it.ai.game.Action;
 import it.ai.game.Game;
 import it.ai.game.tablut.ashton.AshtonTablutGame;
 import it.ai.montecarlo.MonteCarlo;
@@ -10,6 +11,7 @@ import it.ai.montecarlo.strategies.bestaction.RobustChildStrategy;
 import it.ai.montecarlo.strategies.score.Ucb1SelectionScoreStrategy;
 import it.ai.montecarlo.strategies.winscore.DefaultWinScoreStrategy;
 import it.ai.players.AgentPlayer;
+import it.ai.protocol.State;
 import it.ai.protocol.Turn;
 import it.ai.util.AshtonMapper;
 
@@ -31,17 +33,26 @@ public class Main {
             MonteCarlo mcts = new MonteCarlo(game,
                     new Ucb1SelectionScoreStrategy(2),
                     new RobustChildStrategy(),
-                    new DefaultWinScoreStrategy(1, 0.5));
+                    new DefaultWinScoreStrategy());
             Agent agent = new MctsAgent(game, mcts, 50);
             Player player = new AgentPlayer(playerName, playerTeam, agent);
 //            Action bestAction = player.getAction(game.start());
 //            Logger.getLogger(Main.class.getName()).info(bestAction.toString());
 //            Player player = new RandomPlayer(playerTeam);
 
-            TablutClient client = new TablutClient(player, new AshtonMapper(), "127.0.0.1");
+            Mapper mapper = new AshtonMapper();
+            TablutClient client = new TablutClient(player, mapper, "127.0.0.1");
             client.run();
+
+            State state = client.getState();
+            it.ai.game.State gameState = mapper.mapToGameState(state);
+            agent.updateState(gameState);
+
+            Iterable<Action> actions = agent.getActions();
+            logger.info("Action history:\n" + actions);
+
         } catch (Exception e) {
-            logger.throwing("", "", e);
+            logger.log(Level.SEVERE, "An exception was thrown", e);
         }
     }
 

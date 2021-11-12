@@ -11,7 +11,6 @@ import it.ai.montecarlo.strategies.winscore.WinScoreStrategy;
 import it.ai.util.MathUtils;
 import it.ai.util.RandomUtils;
 import lombok.Getter;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 import java.util.function.Function;
@@ -19,15 +18,14 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class MonteCarlo {
-    private final Logger logger = Logger.getLogger(MonteCarlo.class.getName());
+    protected final Logger logger = Logger.getLogger(MonteCarlo.class.getName());
 
-    private final Game game;
-    private final MonteCarloSelectionScoreStrategy selectionScoreStrategy;
-    private final MonteCarloBestActionStrategy bestActionStrategy;
-    private final WinScoreStrategy winScoreStrategy;
+    protected final Game game;
+    protected final MonteCarloSelectionScoreStrategy selectionScoreStrategy;
+    protected final MonteCarloBestActionStrategy bestActionStrategy;
+    protected final WinScoreStrategy winScoreStrategy;
 
-    private final Map<Integer, MonteCarloNode> nodes = new HashMap<>();
-    private MonteCarloNode rootNode = null;
+    protected Map<State, MonteCarloNode> nodes = new HashMap<>();
 
     public MonteCarlo(Game game, MonteCarloSelectionScoreStrategy selectionScoreStrategy, MonteCarloBestActionStrategy bestActionStrategy, WinScoreStrategy winScoreStrategy) {
         this.game = game;
@@ -42,33 +40,25 @@ public class MonteCarlo {
      * @param state The state to make a dangling node for; its parent is set to null.
      */
     public void makeNode(State state) {
-        int actionHistory = state.getHistoryHash();
-        if (!nodes.containsKey(actionHistory)) {
-            Collection<Action> unexpandedActions = game.getValidActions(state);
+        if (!nodes.containsKey(state)) {
+            Iterable<Action> unexpandedActions = game.getValidActions(state);
             MonteCarloNode node = new MonteCarloNode(null, null, state, unexpandedActions);
-            nodes.put(actionHistory, node);
+            nodes.put(state, node);
         }
     }
 
-    // TODO: rivedere questo metodo perchè accede a node.children che dovrebbe essere inaccessibile
-    public void updateRootNode(Action action, State state) {
-//        int actionHistory = state.getHistoryHash();
-//        MonteCarloNode node = nodes.get(actionHistory);
-//
-//        if (node == null && rootNode != null && rootNode.getChildren().containsKey(action)) {
-//            logger.fine("Node found for action ".concat(action.toString()));
-//            MonteCarloNode.MonteCarloChild child_node = rootNode.getChildren().get(action);
-//            action = child_node.getAction();
-//            node = child_node.getNode();
-//        }
-//
-//        if (node == null) {
-//            Collection<Action> unexpanded_actions = game.getValidActions(state);
-//            node = new MonteCarloNode(rootNode, action, state, unexpanded_actions);
-//        }
-//
-//        nodes.put(actionHistory, node);
-//        rootNode = node;
+    public void updateNodes(State state) {
+        //TODO: usare la libreria java che storicizza in memory e on disk, basta fare map.clearWithExpires(). dbMap
+        MonteCarloNode node = nodes.get(state);
+
+        nodes = new HashMap<>(); //TODO: Forse meglio HashTable
+        if (node != null) {
+            logger.fine("Node found.");
+            nodes = node.getExpandedNodes().collect(
+                    Collectors.toMap(MonteCarloNode::getState, Function.identity()));
+            nodes.put(state, node);
+//            System.gc();
+        }
     }
 
     /***
@@ -76,8 +66,8 @@ public class MonteCarlo {
      * @return the best action from available statistics.
      */
     public Action bestAction(State state) {
-        MonteCarloNode node = nodes.get(state.getHistoryHash());
-        if (node == null) throw new RuntimeException("Run search before getting best move");
+        MonteCarloNode node = nodes.get(state);
+        if (node == null) throw new RuntimeException("Run search before getting best move.");
 
         // If not all children are expanded, not enough information
         if (!node.isFullyExpanded()) {
@@ -88,11 +78,11 @@ public class MonteCarlo {
             throw new RuntimeException("Not enough information!\nExpanded = " + expanded + " / " + total);
         }
 
-        Action best_action = MathUtils.argmax(node.getAllActions()::iterator,
+        Action bestAction = MathUtils.argmax(node.getAllActions()::iterator,
                 action -> bestActionStrategy.score(node.getChildNode(action)));
 
-        logger.fine("Best action = ".concat(best_action.toString()));
-        return best_action;
+        logger.fine("Best action = ".concat(bestAction.toString()));
+        return bestAction;
     }
 
     /***
@@ -100,29 +90,27 @@ public class MonteCarlo {
      * @param timeout_s timeout in seconds
      */
     public void runSearch(State state, int timeout_s) {
+        updateNodes(state);
         makeNode(state);
 
         long end = System.currentTimeMillis() + timeout_s * 1000L;
         while (System.currentTimeMillis() < end) {
-            MonteCarloNode node = select(state);
+            MonteCarloNode node = selection(state);
             Optional<Integer> winner = game.getWinner(node.getState());
 
-            State finalState = null;
             DistanceFromFinalState distance = new DistanceFromFinalState();
             //if the match is not closed and there are possible actions from the selected node
             if (!winner.isPresent() && !node.isLeaf()) {
-                node = expand(node);
-                Pair<State, Optional<Integer>> simulationResult = simulate(node, RandomUtils::choice, distance);
-                finalState = simulationResult.getLeft();
-                winner = simulationResult.getRight();
+                node = expansion(node);
+                winner = simulation(node, RandomUtils::choice);
             }
 
             if (!winner.isPresent()) throw new RuntimeException("No actions available.");
 
-            backpropagation(node, finalState, winner.get(), distance);
+            backpropagation(node, winner.get());
         }
 
-        MonteCarloNode node = nodes.get(state.getHistoryHash());
+        MonteCarloNode node = nodes.get(state);
         long unexpanded = node.getUnexpandedActions().count();
         long total = node.getAllActions().count();
         long expanded = total - unexpanded;
@@ -133,8 +121,8 @@ public class MonteCarlo {
     /***
      * Phase 1, Selection: Select until not fully expanded OR leaf.
      */
-    private MonteCarloNode select(State state) {
-        MonteCarloNode node = nodes.get(state.getHistoryHash());
+    protected MonteCarloNode selection(State state) {
+        MonteCarloNode node = nodes.get(state);
 
         while (node.isFullyExpanded() && !node.isLeaf()) {
 
@@ -151,7 +139,7 @@ public class MonteCarlo {
     /***
      * Phase 2, Expansion: Expand a random unexpanded child node.
      */
-    private MonteCarloNode expand(MonteCarloNode node) {
+    protected MonteCarloNode expansion(MonteCarloNode node) {
         List<Action> unexpandedActions = node.getUnexpandedActions().collect(Collectors.toList());
         if (unexpandedActions.isEmpty())
             logger.severe("Len = 0, state = ".concat(node.getState().toString()));
@@ -159,10 +147,10 @@ public class MonteCarlo {
         Action action = RandomUtils.choice(unexpandedActions);
 
         State childState = game.nextState(node.getState(), action);
-        Collection<Action> childUnexpandedActions = game.getValidActions(childState);
+        Iterable<Action> childUnexpandedActions = game.getValidActions(childState);
         MonteCarloNode childNode = node.expand(action, childState, childUnexpandedActions);
 
-//        nodes.put(childState.getHistoryHash(), childNode);
+        nodes.put(childState, childNode);
 
         //if child_state.turn == 0:
         //logger.debug(f'Expanding action {action}, parent = {self._nodes[node.state.history_hash()].action}, turn = {child_state.turn}')
@@ -172,7 +160,7 @@ public class MonteCarlo {
     /***
      * Phase 3, Simulation: Play game to terminal state using random actions, return winner.
      */
-    private Pair<State, Optional<Integer>> simulate(MonteCarloNode node, Function<List<Action>, Action> defaultPolicy, DistanceFromFinalState distance) {
+    protected Optional<Integer> simulation(MonteCarloNode node, Function<List<Action>, Action> actionChoicePolicy) {
         State state = node.getState();
         Optional<Integer> winner = game.getWinner(state);
 
@@ -181,57 +169,51 @@ public class MonteCarlo {
             if (validActions.isEmpty())
                 throw new RuntimeException("No valid actions for state" + state);
 
-            Action action = defaultPolicy.apply(validActions);
+            Action action = actionChoicePolicy.apply(validActions);
             state = game.nextState(state, action);
             winner = game.getWinner(state);
-            distance.increment();
+//            distance.increment();
         }
 
-        return Pair.of(state, winner);
+        return winner;
     }
 
     /***
      * Phase 4, Backpropagation: Update ancestor statistics.
      */
-    private void backpropagation(MonteCarloNode node, State finalState, int winner, DistanceFromFinalState distance) {
+    protected void backpropagation(MonteCarloNode node, int winner) {
 //        Map<Integer, Set<Coords>> cellsOccupiedByPlayers = new HashMap<>();
 //        if (finalState != null)
 //            cellsOccupiedByPlayers = getCellsOccupiedByPlayers(finalState);
-        int previousPlayer = game.previousPlayer(winner);
+
+        int nextPlayer = game.nextPlayer(winner);
 
         while (node != null) {
             node.numberOfSimulations += 1;
 
-            double reward;
-            if (winner == Game.DRAW)
-                reward = winScoreStrategy.drawScore(distance.getValue());
+            incrementScore(node, winner, nextPlayer);
 
-                //Score of child node is used by the parent.
-                //Therefore, we increment the child node score if the parent player has won.
-            else if (node.getState().isPlayerTurn(previousPlayer))
-                reward = winScoreStrategy.winScore(distance.getValue());
-            else
-                reward = winScoreStrategy.loseScore(distance.getValue());
+//            incrementRaveScore();
 
-            node.winScore += reward;
 
-//            if (finalState != null) {
-//                Set<Coords> occupiedCells = cellsOccupiedByPlayers.get(node.getState().getTurn());
-//                double finalReward = -reward;
-//                node.getChildrenNodes().forEach(child_node -> {
-//                    //If the pawn moved is still in the final state and the player has won (lost), the action was good(bad)
-//                    //Therefore, we increase the child score
-//
-//                    if (occupiedCells.contains(child_node.getAction().getTo())) {
-//                        child_node.numberOfRave += 1;
-//                        child_node.raveScore += finalReward;
-//                    }
-//                });
-//            }
-
-            distance.increment();
+//            distance.increment();
             node = node.getParent();
         }
+    }
+
+    private void incrementScore(MonteCarloNode node, int winner, int nextPlayer) {
+        double reward;
+        if (winner == Game.DRAW)
+            reward = winScoreStrategy.drawScore();
+
+            //Score of child node is used by the parent.
+            //Therefore, we increment the child node score if the parent player has won.
+        else if (node.getState().isPlayerTurn(nextPlayer))
+            reward = winScoreStrategy.winScore();
+        else
+            reward = winScoreStrategy.loseScore();
+
+        node.winScore += reward;
     }
 
     private Map<Integer, Set<Coords>> getCellsOccupiedByPlayers(State state) {
@@ -239,11 +221,27 @@ public class MonteCarlo {
                 player -> game.cellsOccupiedBy(state, player).collect(Collectors.toSet())));
     }
 
+    private void incrementRaveScore() {
+//        if (finalState != null) {
+//            Set<Coords> occupiedCells = cellsOccupiedByPlayers.get(node.getState().getTurn());
+//            double finalReward = -reward;
+//            node.getChildrenNodes().forEach(child_node -> {
+//                //If the pawn moved is still in the final state and the player has won (lost), the action was good(bad)
+//                //Therefore, we increase the child score
+//
+//                if (occupiedCells.contains(child_node.getAction().getTo())) {
+//                    child_node.numberOfRave += 1;
+//                    child_node.raveScore += finalReward;
+//                }
+//            });
+//        }
+    }
+
     /***
      * Return MCTS statistics for this node and children nodes.
      */
     public MonteCarloStats getStats(State state) {
-        MonteCarloNode node = nodes.get(state.getHistoryHash());
+        MonteCarloNode node = nodes.get(state);
         MonteCarloStats stats = new MonteCarloStats(node.numberOfSimulations, node.winScore,
                 node.numberOfRave, node.raveScore);
 
@@ -272,9 +270,9 @@ public class MonteCarlo {
      *  Successivamente è possibile usare supervised learning per stimare i pesi della default_policy
      */
 
-    private static class DistanceFromFinalState {
+    protected static class DistanceFromFinalState {
         @Getter
-        private int value = 0;
+        private int value = 1;
 
         public void increment() {
             value++;

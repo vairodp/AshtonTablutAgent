@@ -7,7 +7,6 @@ import lombok.Getter;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -79,7 +78,7 @@ public class MonteCarloNode {
     @Getter
     private final Map<Action, MonteCarloChild> children = new HashMap<>();
 
-    public MonteCarloNode(MonteCarloNode parent, Action action, State state, Collection<Action> unexpandedActions) {
+    public MonteCarloNode(MonteCarloNode parent, Action action, State state, Iterable<Action> unexpandedActions) {
         this.action = action;
         this.state = state;
         this.parent = parent;
@@ -103,16 +102,12 @@ public class MonteCarloNode {
         return child.getNode();
     }
 
-    public Stream<MonteCarloNode> getChildrenNodes() {
-        return children.values().stream().map(MonteCarloChild::getNode).filter(Objects::nonNull);
-    }
-
     /***
      * Expand the specified child action and return the new child node.
      *           Add the node to the array of children nodes.
      *           Remove the action from the array of unexpanded plays.
      */
-    public MonteCarloNode expand(Action action, State childState, Collection<Action> childUnexpandedMoves) {
+    public MonteCarloNode expand(Action action, State childState, Iterable<Action> childUnexpandedMoves) {
         if (!children.containsKey(action)) throw new RuntimeException("No such action!");
 
         MonteCarloNode childNode = new MonteCarloNode(this, action, childState, childUnexpandedMoves);
@@ -133,6 +128,10 @@ public class MonteCarloNode {
      */
     public Stream<Action> getUnexpandedActions() {
         return children.values().stream().filter(child -> child.getNode() == null).map(MonteCarloChild::getAction);
+    }
+
+    public Stream<MonteCarloNode> getExpandedNodes() {
+        return children.values().stream().map(MonteCarloChild::getNode).filter(Objects::nonNull);
     }
 
     public boolean isFullyExpanded() {

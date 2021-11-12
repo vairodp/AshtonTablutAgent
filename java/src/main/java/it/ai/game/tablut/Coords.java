@@ -1,9 +1,8 @@
 package it.ai.game.tablut;
 
 import java.io.Serializable;
-import java.util.Objects;
 
-public class Coords implements it.ai.game.Coords, Serializable {
+public final class Coords implements it.ai.game.Coords, Serializable {
     public static final Coords A4 = Coords.fromString("A4");
     public static final Coords A5 = Coords.fromString("A5");
     public static final Coords A6 = Coords.fromString("A6");
@@ -54,7 +53,8 @@ public class Coords implements it.ai.game.Coords, Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(row, column);
+        int value = 629;
+        return (value + row) * value + column;
     }
 
     @Override

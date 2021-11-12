@@ -131,6 +131,7 @@ public class Board implements Cloneable, Serializable {
     public String toString() {
         return "Board{" +
                 "board=" + Arrays.deepToString(board) +
+                ",pawnCoords=" + pawnCoords +
                 '}';
     }
 }

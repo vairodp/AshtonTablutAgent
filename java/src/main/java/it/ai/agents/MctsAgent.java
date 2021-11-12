@@ -5,13 +5,18 @@ import it.ai.game.Game;
 import it.ai.game.State;
 import it.ai.montecarlo.MonteCarlo;
 import it.ai.montecarlo.MonteCarloStats;
+import lombok.Getter;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 
 public class MctsAgent implements Agent {
     private final Logger logger = Logger.getLogger(MctsAgent.class.getName());
 
+    @Getter
+    private final List<Action> actions;
     private final Game game;
     private final int timeout;
     private final MonteCarlo mcts;
@@ -22,6 +27,7 @@ public class MctsAgent implements Agent {
         this.timeout = timeout_s;
         this.mcts = mcts;
         rootState = game.start();
+        actions = new ArrayList<>();
     }
 
     /***
@@ -39,8 +45,12 @@ public class MctsAgent implements Agent {
     }
 
     private void addOpponentAction(Action action) {
+        actions.add(action);
+
         rootState = game.nextState(rootState, action);
-        mcts.updateRootNode(action, rootState);
+        mcts.updateNodes(rootState); //TODO: probabilmente questo è inutile, commentare
+//        mcts.updateRootNode(action, rootState);
+
     }
 
     /***
@@ -52,10 +62,12 @@ public class MctsAgent implements Agent {
 
         mcts.runSearch(state, timeout);
         Action bestAction = mcts.bestAction(state);
+        actions.add(bestAction);
 
         // Update root state and node
         rootState = game.nextState(state, bestAction);
-        mcts.updateRootNode(bestAction, rootState);
+//        mcts.updateNodes(rootState);
+//        mcts.updateRootNode(bestAction, rootState);
 
         MonteCarloStats stats = mcts.getStats(state);
         logger.fine(stats.toString());

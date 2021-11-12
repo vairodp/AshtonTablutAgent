@@ -1,9 +1,10 @@
 package it.ai.montecarlo.strategies.winscore;
 
 public interface WinScoreStrategy {
-    double winScore(int distanceFromFinalState);
+    double winScore();
 
-    double loseScore(int distanceFromFinalState);
+    double drawScore();
 
-    double drawScore(int distanceFromFinalState);
+    double loseScore();
+
 }

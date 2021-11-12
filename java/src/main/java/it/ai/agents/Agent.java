@@ -13,4 +13,6 @@ public interface Agent {
      * Get action from given state
      */
     Action getAction(State state);
+
+    Iterable<Action> getActions();
 }

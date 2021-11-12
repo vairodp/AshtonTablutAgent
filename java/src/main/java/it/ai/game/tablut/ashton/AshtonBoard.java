@@ -1,6 +1,5 @@
 package it.ai.game.tablut.ashton;
 
-import com.google.common.collect.Sets;
 import it.ai.game.tablut.Board;
 import it.ai.game.tablut.Coords;
 import it.ai.game.tablut.Pawn;
@@ -9,7 +8,7 @@ import java.util.Collection;
 import java.util.Set;
 
 public class AshtonBoard extends Board {
-    private static final Set<Coords> citadels = Sets.newHashSet(
+    private static final Set<Coords> citadels = Set.of(
             Coords.A4, Coords.A5, Coords.A6, Coords.B5, Coords.D1, Coords.E1, Coords.F1, Coords.E2, Coords.I4,
             Coords.I5, Coords.I6, Coords.H5, Coords.D9, Coords.E9, Coords.F9, Coords.E8);
 
