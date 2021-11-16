@@ -9,33 +9,21 @@ import java.util.Collection;
 
 public final class MonteCarloStats {
     private final int numberOfSimulations;
-    private final double winScore;
-    private final int numberOfRave;
-    private final double raveScore;
+    private final double actionValue;
 
     private final Collection<MonteCarloNodeStats> children = new ArrayList<>();
 
-    public MonteCarloStats(int numberOfSimulations, double winScore, int numberOfRave, double raveScore) {
+    public MonteCarloStats(int numberOfSimulations, double actionValue) {
         this.numberOfSimulations = numberOfSimulations;
-        this.winScore = winScore;
-        this.numberOfRave = numberOfRave;
-        this.raveScore = raveScore;
+        this.actionValue = actionValue;
     }
 
     public int getNumberOfSimulations() {
         return this.numberOfSimulations;
     }
 
-    public double getWinScore() {
-        return this.winScore;
-    }
-
-    public int getNumberOfRave() {
-        return this.numberOfRave;
-    }
-
-    public double getRaveScore() {
-        return this.raveScore;
+    public double getActionValue() {
+        return this.actionValue;
     }
 
     public Collection<MonteCarloNodeStats> getChildren() {
@@ -52,26 +40,22 @@ public final class MonteCarloStats {
 
         return new EqualsBuilder()
                 .append(numberOfSimulations, that.numberOfSimulations)
-                .append(winScore, that.winScore)
-                .append(numberOfRave, that.numberOfRave)
-                .append(raveScore, that.raveScore)
+                .append(actionValue, that.actionValue)
                 .append(children, that.children).isEquals();
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
-                .append(numberOfSimulations).append(winScore)
-                .append(numberOfRave).append(raveScore).append(children).toHashCode();
+                .append(numberOfSimulations).append(actionValue)
+                .append(children).toHashCode();
     }
 
     @Override
     public String toString() {
         return "MonteCarloStats{" +
                 "numberOfSimulations=" + numberOfSimulations +
-                ", winScore=" + winScore +
-                ", numberOfRave=" + numberOfRave +
-                ", raveScore=" + raveScore +
+                ", actionValue=" + actionValue +
                 ", children=" + children +
                 '}';
     }
@@ -79,20 +63,16 @@ public final class MonteCarloStats {
     public static final class MonteCarloNodeStats {
         private final Action action;
         private final int numberOfSimulations;
-        private final double winScore;
-        private final int numberOfRave;
-        private final double raveScore;
+        private final double actionValue;
 
-        public MonteCarloNodeStats(Action action, int numberOfSimulations, double winScore, int numberOfRave, double raveScore) {
+        public MonteCarloNodeStats(Action action, int numberOfSimulations, double actionValue) {
             this.action = action;
             this.numberOfSimulations = numberOfSimulations;
-            this.winScore = winScore;
-            this.numberOfRave = numberOfRave;
-            this.raveScore = raveScore;
+            this.actionValue = actionValue;
         }
 
         public MonteCarloNodeStats(Action action) {
-            this(action, 0, 0, 0, 0);
+            this(action, 0, 0);
         }
 
         public Action getAction() {
@@ -103,16 +83,8 @@ public final class MonteCarloStats {
             return this.numberOfSimulations;
         }
 
-        public double getWinScore() {
-            return this.winScore;
-        }
-
-        public int getNumberOfRave() {
-            return this.numberOfRave;
-        }
-
-        public double getRaveScore() {
-            return this.raveScore;
+        public double getActionValue() {
+            return this.actionValue;
         }
 
         @Override
@@ -123,12 +95,12 @@ public final class MonteCarloStats {
 
             MonteCarloNodeStats that = (MonteCarloNodeStats) o;
 
-            return new EqualsBuilder().append(numberOfSimulations, that.numberOfSimulations).append(winScore, that.winScore).append(numberOfRave, that.numberOfRave).append(raveScore, that.raveScore).append(action, that.action).isEquals();
+            return new EqualsBuilder().append(numberOfSimulations, that.numberOfSimulations).append(actionValue, that.actionValue).append(action, that.action).isEquals();
         }
 
         @Override
         public int hashCode() {
-            return new HashCodeBuilder(17, 37).append(action).append(numberOfSimulations).append(winScore).append(numberOfRave).append(raveScore).toHashCode();
+            return new HashCodeBuilder(17, 37).append(action).append(numberOfSimulations).append(actionValue).toHashCode();
         }
 
         @Override
@@ -136,9 +108,7 @@ public final class MonteCarloStats {
             return "MonteCarloNodeStats{" +
                     "action=" + action +
                     ", numberOfSimulations=" + numberOfSimulations +
-                    ", winScore=" + winScore +
-                    ", numberOfRave=" + numberOfRave +
-                    ", raveScore=" + raveScore +
+                    ", actionValue=" + actionValue +
                     '}';
         }
     }

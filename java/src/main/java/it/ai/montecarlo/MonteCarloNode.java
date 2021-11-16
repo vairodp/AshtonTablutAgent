@@ -16,62 +16,12 @@ import java.util.stream.Stream;
  * Class representing a node in the search tree. Stores tree search stats.
  */
 public class MonteCarloNode {
-    static final class MonteCarloChild {
-        private final Action action;
-        private final MonteCarloNode node;
-
-        public MonteCarloChild(Action action) {
-            this(action, null);
-        }
-
-        public MonteCarloChild(Action action, MonteCarloNode node) {
-            this.action = action;
-            this.node = node;
-        }
-
-        public Action getAction() {
-            return this.action;
-        }
-
-        public MonteCarloNode getNode() {
-            return this.node;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-
-            if (!(o instanceof MonteCarloChild)) return false;
-
-            MonteCarloChild that = (MonteCarloChild) o;
-
-            return new EqualsBuilder().append(action, that.action).append(node, that.node).isEquals();
-        }
-
-        @Override
-        public int hashCode() {
-            return new HashCodeBuilder(17, 37).append(action).append(node).toHashCode();
-        }
-
-        @Override
-        public String toString() {
-            return "MonteCarloChild{" +
-                    "action=" + action +
-                    ", node=" + node +
-                    '}';
-        }
-    }
-
     private final Action action;
     private final State state;
 
     // MonteCarlo stuff
     int numberOfSimulations = 0;
-    double winScore = 0;
-
-    // Rave stuff
-    int numberOfRave = 0;
-    double raveScore = 0;
+    double actionValue = 0;
 
     // Tree stuff
     private final MonteCarloNode parent;
@@ -166,15 +116,54 @@ public class MonteCarloNode {
         return this.numberOfSimulations;
     }
 
-    public double winScore() {
-        return this.winScore;
+    public double getActionValue() {
+        return this.actionValue;
     }
 
-    public int numberOfRave() {
-        return this.numberOfRave;
+    static final class MonteCarloChild {
+        private final Action action;
+        private final MonteCarloNode node;
+
+        public MonteCarloChild(Action action) {
+            this(action, null);
+        }
+
+        public MonteCarloChild(Action action, MonteCarloNode node) {
+            this.action = action;
+            this.node = node;
+        }
+
+        public Action getAction() {
+            return this.action;
+        }
+
+        public MonteCarloNode getNode() {
+            return this.node;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+
+            if (!(o instanceof MonteCarloChild)) return false;
+
+            MonteCarloChild that = (MonteCarloChild) o;
+
+            return new EqualsBuilder().append(action, that.action).append(node, that.node).isEquals();
+        }
+
+        @Override
+        public int hashCode() {
+            return new HashCodeBuilder(17, 37).append(action).append(node).toHashCode();
+        }
+
+        @Override
+        public String toString() {
+            return "MonteCarloChild{" +
+                    "action=" + action +
+                    ", node=" + node +
+                    '}';
+        }
     }
 
-    public double raveScore() {
-        return this.raveScore;
-    }
 }

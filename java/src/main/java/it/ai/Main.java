@@ -6,10 +6,13 @@ import it.ai.client.TablutClient;
 import it.ai.game.Action;
 import it.ai.game.Game;
 import it.ai.game.tablut.ashton.AshtonTablutGame;
-import it.ai.montecarlo.MonteCarlo;
+import it.ai.montecarlo.MCTS;
+import it.ai.montecarlo.MCTSImpl;
+import it.ai.montecarlo.MCTSRootParallelization;
 import it.ai.montecarlo.strategies.bestaction.RobustChildStrategy;
 import it.ai.montecarlo.strategies.score.Ucb1SelectionScoreStrategy;
 import it.ai.montecarlo.strategies.winscore.DefaultWinScoreStrategy;
+import it.ai.montecarlo.termination.TimeoutTerminationCondition;
 import it.ai.players.AgentPlayer;
 import it.ai.protocol.State;
 import it.ai.protocol.Turn;
@@ -21,6 +24,30 @@ import java.util.Date;
 import java.util.logging.*;
 
 public class Main {
+//    private static boolean check(State state, Action action, int pawn){
+//        Board board = ((TablutState)state).getBoard();
+//        return checkBoard(board) && checkMovedPawn(board, action,pawn);
+//    }
+//    private static boolean checkMovedPawn(Board board, Action action, int pawn) {
+//        int from = board.get(action.getFrom());
+//        return (from == Pawn.EMPTY || from == Pawn.THRONE) &&  Pawn.getOwner(board.get(action.getTo())) == pawn;
+//    }
+//
+//    private static boolean checkBoard(Board board) {
+//        if (isDifferent(board, Pawn.BLACK)) return false;
+//        if (isDifferent(board, Pawn.WHITE)) return false;
+//        if (isDifferent(board, Pawn.KING)) return false;
+//        return true;
+//    }
+//
+//    private static boolean isDifferent(Board board, int pawn) {
+//        for (Coords coords : board.getPawnCoords(pawn)) {
+//            if (board.get(coords) != pawn)
+//                return true;
+//        }
+//        return false;
+//    }
+
     public static void main(String[] args) throws IOException {
         Logger logger = Logger.getLogger(Main.class.getName());
         String playerName = "AI";
@@ -30,11 +57,23 @@ public class Main {
 
         try {
             Game game = new AshtonTablutGame(0);
-            MonteCarlo mcts = new MonteCarlo(game,
+
+//            MonteCarlo mcts = new NeuralNetworkMonteCarlo(game,
+//                    new Ucb1SelectionScoreStrategy(2),
+//                    new RobustChildStrategy(),
+//                    new DefaultWinScoreStrategy(), treshold);
+
+//            MCTS mcts = new MCTSRootParallelization(() -> new MCTSImpl(game,
+//                    new Ucb1SelectionScoreStrategy(2),
+//                    new RobustChildStrategy(),
+//                    new DefaultWinScoreStrategy()), 4);
+
+            MCTS mcts = new MCTSImpl(game,
                     new Ucb1SelectionScoreStrategy(2),
                     new RobustChildStrategy(),
                     new DefaultWinScoreStrategy());
-            Agent agent = new MctsAgent(game, mcts, 50);
+
+            Agent agent = new MctsAgent(game, mcts, ()->new TimeoutTerminationCondition(50));
             Player player = new AgentPlayer(playerName, playerTeam, agent);
 //            Action bestAction = player.getAction(game.start());
 //            Logger.getLogger(Main.class.getName()).info(bestAction.toString());
