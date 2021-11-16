@@ -146,7 +146,7 @@ class MonteCarlo:
 
         return child_node
 
-    def _simulate(self, node: MonteCarloNode, default_policy=random.choice) -> (State, Optional[int]):
+    def _simulate(self, node: MonteCarloNode, default_policy=random.choice): #-> (State, Optional[int])
         """Phase 3, Simulation: Play game to terminal state using random actions, return winner."""
         state = node.state
         winner = self._game.winner(state)
