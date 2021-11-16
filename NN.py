@@ -21,13 +21,8 @@ import random
 
 
 df=pd.read_csv(os.path.join("datasets", "states.csv"))
-dfg=pd.read_csv(os.path.join("datasets", "games.csv")
+dfg=pd.read_csv(os.path.join("datasets", "games.csv"))
 
-
-initial_board=np.array([['O' 'O' 'O' 'B' 'B' 'B' 'O' 'O' 'O'], ['O' 'O' 'O' 'O' 'B' 'O' 'O' 'O' 'O'], ['O' 'O' 'O' 'O' 'W' 'O' 'O' 'O' 'O'], ['B' 'O' 'O' 'O' 'W' 'O' 'O' 'O' 'B'], ['B' 'B' 'W' 'W' 'K' 'W' 'W' 'B' 'B'], ['B' 'O' 'O' 'O' 'W' 'O' 'O' 'O' 'B'], ['O' 'O' 'O' 'O' 'W' 'O' 'O' 'O' 'O'], ['O' 'O' 'O' 'O' 'B' 'O' 'O' 'O' 'O'], ['O' 'O' 'O' 'B' 'B' 'B' 'O' 'O' 'O']])
-flatten_ib=''
-for i in range(initial_board.shape[0]):
-    flatten_ib+=initial_board[i,0]
     
 states=[[i for i in list(df['board'][j]) if i in ['O','B','W','K','T']] for j in range(20585)]
 def ch(let):
@@ -244,14 +239,13 @@ def ReLU(z):
 def ReLU_prime(z):
     return (np.array(z) > 0).astype('int')
 
+
+
+
 nn=Network(sizes)
-
 random.shuffle(data)
-
 training=data[:18000]
-
 test=data[18000:]
-
 nn.SGD(training,200,20,7)
 
 c=[]
