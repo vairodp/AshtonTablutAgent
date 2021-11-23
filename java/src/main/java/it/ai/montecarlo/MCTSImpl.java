@@ -1,5 +1,6 @@
 package it.ai.montecarlo;
 
+import it.ai.constants.Constants;
 import it.ai.game.Action;
 import it.ai.game.Coords;
 import it.ai.game.Game;
@@ -48,7 +49,7 @@ public class MCTSImpl extends AbstractMCTS {
         if (!nodes.containsKey(state)) {
             Iterable<Action> unexpandedActions = game.getValidActions(state);
             MonteCarloNode node = new MonteCarloNode(null, null, state, unexpandedActions);
-            nodes.put(state, node);
+//            nodes.put(state, node);
             rootNode = node;
         }
     }
@@ -85,7 +86,7 @@ public class MCTSImpl extends AbstractMCTS {
             long total = rootNode.getAllActions().count();
             long expanded = total - unexpanded;
             logger.severe("Expanded = " + expanded + " / " + total);
-            throw new RuntimeException("Not enough information!\nExpanded = " + expanded + " / " + total);
+//            throw new RuntimeException("Not enough information!\nExpanded = " + expanded + " / " + total);
         }
 
         Action bestAction = MathUtils.argmax(rootNode.getAllActions()::iterator, this::getActionScore);
@@ -106,7 +107,7 @@ public class MCTSImpl extends AbstractMCTS {
         //TODO: use termination condition
         TerminationCondition terminationCondition = terminationConditionFactory.get();
         while (!terminationCondition.reached()) {
-            MonteCarloNode node = selection(state);
+            MonteCarloNode node = selection();
             Optional<Integer> winner = game.getWinner(node.getState());
 
 //            DistanceFromFinalState distance = new DistanceFromFinalState();
@@ -122,7 +123,7 @@ public class MCTSImpl extends AbstractMCTS {
             backpropagation(node, winner.get());
         }
 
-        MonteCarloNode node = nodes.get(state);
+        MonteCarloNode node = rootNode;
         long unexpanded = node.getUnexpandedActions().count();
         long total = node.getAllActions().count();
         long expanded = total - unexpanded;
@@ -134,8 +135,8 @@ public class MCTSImpl extends AbstractMCTS {
      * Phase 1, Selection: Select until not fully expanded OR leaf.
      */
     @Override
-    protected MonteCarloNode selection(State state) {
-        MonteCarloNode node = nodes.get(state);
+    protected MonteCarloNode selection() {
+        MonteCarloNode node = rootNode;
 
         while (node.isFullyExpanded() && !node.isLeaf()) {
 
@@ -224,7 +225,7 @@ public class MCTSImpl extends AbstractMCTS {
 
     private void incrementScore(MonteCarloNode node, int winner, int nextPlayer) {
         double reward;
-        if (winner == Game.DRAW)
+        if (winner == Constants.Outcome.DRAW)
             reward = winScoreStrategy.drawScore();
 
             //Score of child node is used by the parent.
@@ -262,8 +263,8 @@ public class MCTSImpl extends AbstractMCTS {
      * Return MCTS statistics for this node and children nodes.
      */
     @Override
-    public MonteCarloStats getStats(State state) {
-        MonteCarloNode node = nodes.get(state);
+    public MonteCarloStats getStats() {
+        MonteCarloNode node = rootNode;
         MonteCarloStats stats = new MonteCarloStats(node.numberOfSimulations, node.actionValue);
 
         for (MonteCarloNode.MonteCarloChild child : node.getChildren().values()) {

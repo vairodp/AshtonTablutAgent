@@ -102,6 +102,10 @@ public class Board implements Cloneable, Serializable {
         return pawnCoords.get(pawn);
     }
 
+    public int[][] toArray() {
+        return board;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

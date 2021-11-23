@@ -8,12 +8,12 @@ public class DefaultWinScoreStrategy implements WinScoreStrategy {
 
     @Override
     public double drawScore() {
-        return 0;
+        return 0.2;
     }
 
     @Override
     public double loseScore() {
-        return -1;
+        return 0;
     }
 
 }

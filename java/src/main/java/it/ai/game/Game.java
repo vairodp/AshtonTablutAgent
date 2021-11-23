@@ -5,8 +5,6 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 public interface Game {
-    int DRAW = -1;
-
 
     /***
      * Generate and return the initial game state.

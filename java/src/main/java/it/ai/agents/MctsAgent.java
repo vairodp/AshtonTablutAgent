@@ -66,7 +66,7 @@ public class MctsAgent implements Agent {
         // Update root state
         rootState = game.nextState(state, bestAction);
 
-        MonteCarloStats stats = mcts.getStats(state);
+        MonteCarloStats stats = mcts.getStats();
         logger.fine(stats.toString());
 
         return bestAction;

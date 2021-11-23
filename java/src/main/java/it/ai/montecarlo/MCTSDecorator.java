@@ -46,11 +46,10 @@ public class MCTSDecorator extends AbstractMCTS {
 
     /***
      * Phase 1, Selection: Select until not fully expanded OR leaf.
-     * @param state
      */
     @Override
-    protected MonteCarloNode selection(State state) {
-        return mcts.selection(state);
+    protected MonteCarloNode selection() {
+        return mcts.selection();
     }
 
     /***
@@ -91,7 +90,7 @@ public class MCTSDecorator extends AbstractMCTS {
      * @param state
      */
     @Override
-    public MonteCarloStats getStats(State state) {
-        return mcts.getStats(state);
+    public MonteCarloStats getStats() {
+        return mcts.getStats();
     }
 }

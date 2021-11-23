@@ -3,6 +3,7 @@ package it.ai.game.tablut.ashton;
 import com.google.common.collect.Sets;
 import it.ai.collections.Iterables;
 import it.ai.collections.Streams;
+import it.ai.constants.Constants;
 import it.ai.game.Game;
 import it.ai.game.State;
 import it.ai.game.tablut.*;
@@ -31,7 +32,7 @@ public class AshtonTablutGame implements Game {
      */
     @Override
     public State start() {
-        return new TablutState(new AshtonBoard(), Player.WHITE);
+        return new TablutState(new AshtonBoard(), Constants.Player.WHITE);
     }
 
 
@@ -88,7 +89,7 @@ public class AshtonTablutGame implements Game {
 
     private List<Coords> getPlayerPawnCells(Board board, int player) {
         List<Coords> currentPlayerPawnCells = new ArrayList<>(board.getPawnCoords(player));
-        if (player == Player.WHITE)
+        if (player == Constants.Player.WHITE)
             currentPlayerPawnCells.addAll(board.getPawnCoords(Pawn.KING));
         return currentPlayerPawnCells;
     }
@@ -121,11 +122,11 @@ public class AshtonTablutGame implements Game {
         Board board = state.getBoard();
         //controllo se sono fuori dal tabellone
         //TODO: remove this check
-        if (action.getFrom().getColumn() > board.numberOfColumns() - 1 || action.getFrom().getRow() > board.numberOfRows() - 1
-                || action.getTo().getRow() > board.numberOfRows() - 1 || action.getTo().getColumn() > board.numberOfColumns() - 1
-                || action.getFrom().getColumn() < 0 || action.getFrom().getRow() < 0 || action.getTo().getRow() < 0 || action.getTo().getColumn() < 0) {
-            return false;
-        }
+//        if (action.getFrom().getColumn() > board.numberOfColumns() - 1 || action.getFrom().getRow() > board.numberOfRows() - 1
+//                || action.getTo().getRow() > board.numberOfRows() - 1 || action.getTo().getColumn() > board.numberOfColumns() - 1
+//                || action.getFrom().getColumn() < 0 || action.getFrom().getRow() < 0 || action.getTo().getRow() < 0 || action.getTo().getColumn() < 0) {
+//            return false;
+//        }
 
         //controllo la casella di arrivo
         if (board.get(action.getTo()) != Pawn.EMPTY)
@@ -149,19 +150,19 @@ public class AshtonTablutGame implements Game {
         if (action.getFrom().equals(action.getTo()))
             return false;
 
-        // TODO: remove
-        //controllo se sto muovendo una pedina giusta
-        if (state.getTurn() == Player.WHITE && !Pawn.isWhite(board.get(action.getFrom())))
+//        // TODO: remove
+//        //controllo se sto muovendo una pedina giusta
+//        if (state.getTurn() == Constants.Player.WHITE && !Pawn.isWhite(board.get(action.getFrom())))
+//            return false;
+
+        if (state.getTurn() == Constants.Player.BLACK && board.get(action.getFrom()) != Pawn.BLACK)
             return false;
 
-        if (state.getTurn() == Player.BLACK && board.get(action.getFrom()) != Pawn.BLACK)
-            return false;
-
-        // TODO: remove
-        //controllo di non muovere in diagonale
-        if (action.getFrom().getRow() != action.getTo().getRow()
-                && action.getFrom().getColumn() != action.getTo().getColumn())
-            return false;
+//        // TODO: remove
+//        //controllo di non muovere in diagonale
+//        if (action.getFrom().getRow() != action.getTo().getRow()
+//                && action.getFrom().getColumn() != action.getTo().getColumn())
+//            return false;
 
         //controllo di non scavalcare pedine
         if (action.getFrom().getRow() == action.getTo().getRow()) {
@@ -225,18 +226,18 @@ public class AshtonTablutGame implements Game {
         TablutState state = (TablutState) _state;
         int turn = previousPlayer(state.getTurn());
 
-        if (turn == Player.WHITE) {
+        if (turn == Constants.Player.WHITE) {
             if (isKingOnEdge(state) || state.getBoard().count(Pawn.BLACK) == 0)
-                return Optional.of(Player.WHITE);
+                return Optional.of(Constants.Outcome.WHITE_WIN);
         }
 
-        if (turn == Player.BLACK) {
+        if (turn == Constants.Player.BLACK) {
             if (state.getBoard().count(Pawn.KING) == 0)
-                return Optional.of(Player.BLACK);
+                return Optional.of(Constants.Outcome.BLACK_WIN);
         }
 
         if (isADraw(state))
-            return Optional.of(Game.DRAW);
+            return Optional.of(Constants.Outcome.DRAW);
 
         if (noValidActions(state))
             return Optional.of(nextPlayer(turn));
@@ -291,7 +292,7 @@ public class AshtonTablutGame implements Game {
         if (fromState.getTurn() == toState.getTurn())
             return Optional.empty();
 
-        if (fromState.getTurn() == Player.WHITE) {
+        if (fromState.getTurn() == Constants.Player.WHITE) {
             Optional<it.ai.game.Action> action = getActionForPawn(fromState, toState, Pawn.KING);
             if (action.isPresent()) return action;
         }
@@ -322,7 +323,7 @@ public class AshtonTablutGame implements Game {
     public Stream<it.ai.game.Coords> cellsOccupiedBy(State _state, int player) {
         TablutState state = (TablutState) _state;
         Stream<Coords> cells = state.getBoard().getPawnCoords(player).stream();
-        if (player == Player.WHITE) {
+        if (player == Constants.Player.WHITE) {
             cells = Stream.concat(cells, state.getBoard().getPawnCoords(Pawn.KING).stream());
         }
         return cells.map(Function.identity());

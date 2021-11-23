@@ -1,9 +1,9 @@
 package it.ai.util;
 
+import it.ai.constants.Constants;
 import it.ai.Mapper;
 import it.ai.game.State;
 import it.ai.game.tablut.Coords;
-import it.ai.game.tablut.Player;
 import it.ai.game.tablut.TablutState;
 import it.ai.game.tablut.ashton.AshtonBoard;
 import it.ai.protocol.Action;
@@ -16,8 +16,8 @@ import java.util.stream.Collectors;
 
 public class AshtonMapper implements Mapper {
     private static final Map<Integer, String> protocolTurns = new HashMap<>() {{
-        put(Player.WHITE, Turn.WHITE);
-        put(Player.BLACK, Turn.BLACK);
+        put(Constants.Player.WHITE, Turn.WHITE);
+        put(Constants.Player.BLACK, Turn.BLACK);
     }};
     private static final Map<String, Integer> gameTurns =
             protocolTurns.entrySet().stream()

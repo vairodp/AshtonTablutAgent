@@ -1,8 +1,10 @@
 package it.ai.game.tablut;
 
+import it.ai.constants.Constants;
+
 public final class Pawn {
-    public static final int WHITE = Player.WHITE;
-    public static final int BLACK = Player.BLACK;
+    public static final int WHITE = Constants.Player.WHITE;
+    public static final int BLACK = Constants.Player.BLACK;
     public static final int EMPTY = -1;
     public static final int THRONE = 10;
     public static final int KING = 100;
@@ -13,10 +15,10 @@ public final class Pawn {
 
     public static Integer getOwner(int pawn) {
         if (pawn == Pawn.BLACK)
-            return Player.BLACK;
+            return Constants.Player.BLACK;
 
         if (Pawn.isWhite(pawn))
-            return Player.WHITE;
+            return Constants.Player.WHITE;
 
         return null;
     }

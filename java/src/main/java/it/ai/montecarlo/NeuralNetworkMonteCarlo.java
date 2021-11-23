@@ -1,41 +1,36 @@
 package it.ai.montecarlo;
 
+import it.ai.constants.Constants;
 import it.ai.game.State;
-import lombok.Getter;
+import it.ai.neuralnetworks.Outcome;
+import it.ai.neuralnetworks.ValueNeuralNetwork;
 
 import java.util.Optional;
 
 public class NeuralNetworkMonteCarlo extends MCTSDecorator {
+    private final ValueNeuralNetwork blackNetwork;
+    private final ValueNeuralNetwork whiteNetwork;
     private final double threshold;
 
-    public NeuralNetworkMonteCarlo(AbstractMCTS mcts, double threshold) {
+    public NeuralNetworkMonteCarlo(AbstractMCTS mcts, ValueNeuralNetwork blackNetwork, ValueNeuralNetwork whiteNetwork, double threshold) {
         super(mcts);
+        this.blackNetwork = blackNetwork;
+        this.whiteNetwork = whiteNetwork;
         this.threshold = threshold;
     }
 
     @Override
     protected Optional<Integer> evaluateWinner(State state) {
-        NeuralNetworkOutcome outcome = executeNN(state); //TODO: pag 11
-        if (outcome.getProbability() >= threshold)
-            return outcome.getWinner();
+        Outcome outcome = state.isPlayerTurn(Constants.Player.WHITE)
+                ? whiteNetwork.predict(state)
+                : blackNetwork.predict(state);
+
+        if (outcome.getProbability() >= threshold) {
+            System.out.println("Outcome " + outcome.getWinner() + ", " + outcome.getProbability());
+            return Optional.of(outcome.getWinner());
+        }
 
         return super.evaluateWinner(state);
-    }
-
-    private NeuralNetworkOutcome executeNN(State state) {
-//        return new NeuralNetworkOutcome(probability, winner);
-        return null;
-    }
-
-    @Getter
-    private static class NeuralNetworkOutcome {
-        private final double probability;
-        private final Optional<Integer> winner;
-
-        private NeuralNetworkOutcome(double probability, Optional<Integer> winner) {
-            this.probability = probability;
-            this.winner = winner;
-        }
     }
 }
 

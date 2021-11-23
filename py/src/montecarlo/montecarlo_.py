@@ -28,7 +28,8 @@ class MonteCarlo:
     def stats(self, state: State) -> MonteCarloStats:
         """Return MCTS statistics for this node and children nodes."""
         node: MonteCarloNode = self._nodes[state.history_hash()]
-        stats = MonteCarloStats(node.n_simulations, node.win_score, node.n_rave, node.rave_score)
+        stats = MonteCarloStats(
+            node.n_simulations, node.win_score, node.n_rave, node.rave_score)
 
         for child in node.children.values():
             if child.node is None:
@@ -63,7 +64,8 @@ class MonteCarlo:
 
         if node is None:
             unexpanded_actions = self._game.legal_actions(state).copy()
-            node = MonteCarloNode(self._root_node, action, state, unexpanded_actions)
+            node = MonteCarloNode(self._root_node, action,
+                                  state, unexpanded_actions)
 
         self._nodes[action_history] = node
         self._root_node = node
@@ -79,7 +81,8 @@ class MonteCarlo:
             raise Exception("Not enough information!")
 
         best_action = argmax(
-            lambda action: self._best_action_strategy.score(node.child_node(action)),
+            lambda action: self._best_action_strategy.score(
+                node.child_node(action)),
             node.all_actions())
 
         logger.debug(f'Best action = {best_action}')
@@ -113,7 +116,8 @@ class MonteCarlo:
         unexpanded = len(node.unexpanded_actions())
         total = len(node.all_actions())
         logger.debug(f'Unexpanded = {unexpanded} / {total}')
-        logger.debug(f'n_simulations {node.n_simulations}, win_score {node.win_score}')
+        logger.debug(
+            f'n_simulations {node.n_simulations}, win_score {node.win_score}')
 
     def _select(self, state: State):
         """Phase 1, Selection: Select until not fully expanded OR leaf."""
@@ -121,7 +125,8 @@ class MonteCarlo:
 
         while node.is_fully_expanded() and not node.is_leaf():
             best_action = argmax(
-                lambda action: node.child_node(action).score(self._score_strategy),
+                lambda action: node.child_node(
+                    action).score(self._score_strategy),
                 node.all_actions())
 
             node = node.child_node(best_action)
@@ -146,7 +151,7 @@ class MonteCarlo:
 
         return child_node
 
-    def _simulate(self, node: MonteCarloNode, default_policy=random.choice) -> (State, Optional[int]):
+    def _simulate(self, node: MonteCarloNode, default_policy=random.choice):
         """Phase 3, Simulation: Play game to terminal state using random actions, return winner."""
         state = node.state
         winner = self._game.winner(state)

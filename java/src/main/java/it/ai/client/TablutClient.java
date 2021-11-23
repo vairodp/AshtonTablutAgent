@@ -67,22 +67,22 @@ public class TablutClient implements Runnable {
                 send(action);
             } else if (state.getTurn().equals(Turn.DRAW)) {
                 logger.info("DRAW!");
-                System.exit(0);
+                return;
             } else if (this.player.getTeam().equals(Turn.WHITE)) {
                 if (this.state.getTurn().equals(Turn.WHITE_WIN)) {
                     logger.info("YOU WIN!");
                     System.exit(0);
                 } else if (this.state.getTurn().equals(Turn.BLACK_WIN)) {
                     logger.info("YOU LOSE!");
-                    System.exit(0);
+                    return;
                 }
             } else {
                 if (this.state.getTurn().equals(Turn.WHITE_WIN)) {
                     logger.info("YOU LOSE!");
-                    System.exit(0);
+                    return;
                 } else if (this.state.getTurn().equals(Turn.BLACK_WIN)) {
                     logger.info("YOU WIN!");
-                    System.exit(0);
+                    return;
                 }
                 logger.info("Waiting for your opponent action ... ");
             }

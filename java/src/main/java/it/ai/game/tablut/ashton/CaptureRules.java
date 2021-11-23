@@ -1,6 +1,7 @@
 package it.ai.game.tablut.ashton;
 
 import com.google.common.collect.Sets;
+import it.ai.constants.Constants;
 import it.ai.game.tablut.*;
 
 import java.util.Set;
@@ -14,10 +15,10 @@ final class CaptureRules {
     public static void removeCapturedPawns(TablutState state, Action action) {
         TriConsumer<TablutState, Coords, Coords> simplePawnCapturer = null;
 
-        if (state.getTurn() == Player.BLACK) {
+        if (state.getTurn() == Constants.Player.BLACK) {
             removeKingIfCaptured(state, action);
             simplePawnCapturer = CaptureRules::removeWhitePawnIfCaptured;
-        } else if (state.getTurn() == Player.WHITE) {
+        } else if (state.getTurn() == Constants.Player.WHITE) {
             simplePawnCapturer = CaptureRules::removeBlackPawnIfCaptured;
         }
 

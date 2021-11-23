@@ -81,7 +81,7 @@ public class MCTSRootParallelization implements MCTS {
      * Return MCTS statistics for this node and children nodes.
      */
     @Override
-    public MonteCarloStats getStats(State state) {
+    public MonteCarloStats getStats() {
         //TODO: implement
 
         double actionValue = 0;

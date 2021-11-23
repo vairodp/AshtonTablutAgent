@@ -12,7 +12,7 @@ public abstract class AbstractMCTS implements MCTS {
     /***
      * Phase 1, Selection: Select until not fully expanded OR leaf.
      */
-    protected abstract MonteCarloNode selection(State state);
+    protected abstract MonteCarloNode selection();
 
     /***
      * Phase 2, Expansion: Expand a random unexpanded child node.

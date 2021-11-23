@@ -3,9 +3,9 @@ import numpy as np
 import glob
 import os
 
-dirname = os.path.join(os.path.dirname(__file__), 'datasets')
-os.chdir(os.path.join(dirname, 'old_games'))
-files = glob.glob('*.txt')
+
+dirname = 'datasets'
+files = glob.glob(os.path.join(dirname, 'old_games', '*.txt'))
 
 games = {'id': [], 'winner': []}
 states = {'game_id': [], 'board': [], 'turn': []}
@@ -36,3 +36,9 @@ games.to_csv(os.path.join(dirname, 'games.csv'), index=False)
 
 states = pd.DataFrame(states)
 states.to_csv(os.path.join(dirname, 'states.csv'), index=False)
+
+for i, game in games.iterrows():
+    states_game = states.loc[states['game_id'] == game['id']]
+    states_game['turn'] = game['winner']
+
+states.to_csv(os.path.join(dirname, 'states_results.csv'), index=False)

@@ -6,13 +6,15 @@ import it.ai.client.TablutClient;
 import it.ai.game.Action;
 import it.ai.game.Game;
 import it.ai.game.tablut.ashton.AshtonTablutGame;
+import it.ai.montecarlo.AbstractMCTS;
 import it.ai.montecarlo.MCTS;
 import it.ai.montecarlo.MCTSImpl;
-import it.ai.montecarlo.MCTSRootParallelization;
-import it.ai.montecarlo.strategies.bestaction.RobustChildStrategy;
+import it.ai.montecarlo.NeuralNetworkMonteCarlo;
+import it.ai.montecarlo.strategies.bestaction.MaxChildStrategy;
 import it.ai.montecarlo.strategies.score.Ucb1SelectionScoreStrategy;
 import it.ai.montecarlo.strategies.winscore.DefaultWinScoreStrategy;
 import it.ai.montecarlo.termination.TimeoutTerminationCondition;
+import it.ai.neuralnetworks.ValueNeuralNetwork;
 import it.ai.players.AgentPlayer;
 import it.ai.protocol.State;
 import it.ai.protocol.Turn;
@@ -48,50 +50,57 @@ public class Main {
 //        return false;
 //    }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         Logger logger = Logger.getLogger(Main.class.getName());
+        String blackNN = "value_model_b_1.h5";
+        String whiteNN = "value_model_b_1.h5";
         String playerName = "AI";
         String playerTeam = Turn.BLACK;
 
+        double exploration = 2;
+        double networkThreshold = 0.6;
+
         configureLogger();
 
-        try {
-            Game game = new AshtonTablutGame(0);
+        Game game = new AshtonTablutGame(0);
 
-//            MonteCarlo mcts = new NeuralNetworkMonteCarlo(game,
-//                    new Ucb1SelectionScoreStrategy(2),
-//                    new RobustChildStrategy(),
-//                    new DefaultWinScoreStrategy(), treshold);
+        AbstractMCTS mctsImpl = new MCTSImpl(game,
+                new Ucb1SelectionScoreStrategy(exploration),
+                new MaxChildStrategy(),
+                new DefaultWinScoreStrategy());
+
+        MCTS mcts = new NeuralNetworkMonteCarlo(mctsImpl,
+                new ValueNeuralNetwork(blackNN), new ValueNeuralNetwork(whiteNN), networkThreshold);
 
 //            MCTS mcts = new MCTSRootParallelization(() -> new MCTSImpl(game,
 //                    new Ucb1SelectionScoreStrategy(2),
 //                    new RobustChildStrategy(),
 //                    new DefaultWinScoreStrategy()), 4);
 
-            MCTS mcts = new MCTSImpl(game,
-                    new Ucb1SelectionScoreStrategy(2),
-                    new RobustChildStrategy(),
-                    new DefaultWinScoreStrategy());
-
-            Agent agent = new MctsAgent(game, mcts, ()->new TimeoutTerminationCondition(50));
-            Player player = new AgentPlayer(playerName, playerTeam, agent);
+        Agent agent = new MctsAgent(game, mcts, () -> new TimeoutTerminationCondition(50));
+        Player player = new AgentPlayer(playerName, playerTeam, agent);
 //            Action bestAction = player.getAction(game.start());
 //            Logger.getLogger(Main.class.getName()).info(bestAction.toString());
 //            Player player = new RandomPlayer(playerTeam);
 
-            Mapper mapper = new AshtonMapper();
-            TablutClient client = new TablutClient(player, mapper, "127.0.0.1");
+        Mapper mapper = new AshtonMapper();
+        TablutClient client = new TablutClient(player, mapper, "127.0.0.1");
+
+        try {
             client.run();
 
             State state = client.getState();
+            String winner = state.getTurn();
+            logger.info("Winner:\n" + winner);
+            state.setTurn(playerTeam);
             it.ai.game.State gameState = mapper.mapToGameState(state);
             agent.updateState(gameState);
 
-            Iterable<Action> actions = agent.getActions();
-            logger.info("Action history:\n" + actions);
-
         } catch (Exception e) {
             logger.log(Level.SEVERE, "An exception was thrown", e);
+        } finally {
+            Iterable<Action> actions = agent.getActions();
+            logger.info("Action history:\n" + actions);
         }
     }
 

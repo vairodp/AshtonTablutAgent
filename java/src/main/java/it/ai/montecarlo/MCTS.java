@@ -25,5 +25,5 @@ public interface MCTS {
     /***
      * Return MCTS statistics for this node and children nodes.
      */
-    MonteCarloStats getStats(State state);
+    MonteCarloStats getStats();
 }
