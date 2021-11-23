@@ -4,7 +4,7 @@ from . import Pawn, Coord
 
 
 class Board(np.ndarray):
-    _pawn_cells: dict[int, set[tuple]]
+    _pawn_cells = {}
 
     def __new__(cls, board):
         return np.array(board).view(cls)
@@ -21,7 +21,7 @@ class Board(np.ndarray):
                     self._pawn_cells[pawn].add((i, j))
 
     @property
-    def citadels(self) -> list[Coord]:
+    def citadels(self):
         return []
 
     def count(self, pawn: Pawn):
@@ -29,7 +29,7 @@ class Board(np.ndarray):
             if pawn in self._pawn_cells \
             else np.count_nonzero(self == pawn)
 
-    def pawn_cells(self, pawn: Pawn) -> set[tuple]:
+    def pawn_cells(self, pawn: Pawn):
         return self._pawn_cells[pawn]
 
     def clone(self):

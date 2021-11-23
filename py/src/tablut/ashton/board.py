@@ -10,7 +10,7 @@ __citadels__ = [Coords.A4, Coords.A5, Coords.A6, Coords.B5,
 
 class AshtonBoard(Board):
     @property
-    def citadels(self) -> list[Coord]:
+    def citadels(self):
         return __citadels__
 
     @staticmethod

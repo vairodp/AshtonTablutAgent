@@ -25,14 +25,14 @@ for filename in files:
             states['game_id'].append(id)
             states['board'].append(np.array(board))
             states['turn'].append(lines[i + 11].strip())
-
+            
     games['id'].append(id)
     games['winner'].append(states['turn'][-1])
 
     id += 1
 
 games = pd.DataFrame(games)
-games.to_csv(os.path.join(dirname, 'games.csv'), index=False)
+games.to_csv(os.path.join(dirname, 'game.csv'), index=False)
 
 states = pd.DataFrame(states)
 states.to_csv(os.path.join(dirname, 'states.csv'), index=False)

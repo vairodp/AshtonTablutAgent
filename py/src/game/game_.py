@@ -15,7 +15,7 @@ class Game(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def legal_actions(self, state: State) -> list[Action]:
+    def legal_actions(self, state: State) -> Sequence[Action]:
         """"Return all the possible actions from the given state."""
         pass
 
