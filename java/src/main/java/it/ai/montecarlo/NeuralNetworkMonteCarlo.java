@@ -1,13 +1,17 @@
 package it.ai.montecarlo;
 
+import it.ai.Main;
 import it.ai.constants.Constants;
 import it.ai.game.State;
 import it.ai.neuralnetworks.Outcome;
 import it.ai.neuralnetworks.ValueNeuralNetwork;
 
 import java.util.Optional;
+import java.util.logging.Logger;
 
 public class NeuralNetworkMonteCarlo extends MCTSDecorator {
+    Logger logger = Logger.getLogger(NeuralNetworkMonteCarlo.class.getName());
+
     private final ValueNeuralNetwork blackNetwork;
     private final ValueNeuralNetwork whiteNetwork;
     private final double threshold;
@@ -26,7 +30,7 @@ public class NeuralNetworkMonteCarlo extends MCTSDecorator {
                 : blackNetwork.predict(state);
 
         if (outcome.getProbability() >= threshold) {
-            System.out.println("Outcome " + outcome.getWinner() + ", " + outcome.getProbability());
+            logger.fine("Outcome " + outcome.getWinner() + ", " + outcome.getProbability());
             return Optional.of(outcome.getWinner());
         }
 

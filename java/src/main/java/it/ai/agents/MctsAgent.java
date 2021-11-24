@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class MctsAgent implements Agent {
@@ -36,7 +37,7 @@ public class MctsAgent implements Agent {
      * Update state after an opponent move
      */
     @Override
-    public State updateState(State state) {
+    public State updateStateWithOpponentAction(State state) {
         Optional<Action> action = game.getAction(rootState, state);
         action.ifPresent(a -> {
             addOpponentAction(a);
@@ -66,8 +67,10 @@ public class MctsAgent implements Agent {
         // Update root state
         rootState = game.nextState(state, bestAction);
 
-        MonteCarloStats stats = mcts.getStats();
-        logger.fine(stats.toString());
+        if(logger.isLoggable(Level.FINE)) {
+            MonteCarloStats stats = mcts.getStats();
+            logger.fine(stats.toString());
+        }
 
         return bestAction;
     }

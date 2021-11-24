@@ -15,7 +15,7 @@ public class Ucb1SelectionScoreStrategy implements MonteCarloSelectionScoreStrat
 
     @Override
     public double score(MonteCarloNode node) {
-        return (node.getActionValue() / node.numberOfSimulations())
+        return (node.getRewards() / node.numberOfSimulations())
                 + exploration * Math.sqrt(Math.log(node.getParent().numberOfSimulations()) / node.numberOfSimulations());
     }
 }

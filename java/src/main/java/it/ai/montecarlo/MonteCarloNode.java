@@ -2,54 +2,46 @@ package it.ai.montecarlo;
 
 import it.ai.game.Action;
 import it.ai.game.State;
-import it.ai.montecarlo.strategies.score.MonteCarloSelectionScoreStrategy;
-import lombok.Getter;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
+import it.ai.tree.Node;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
 /***
  * Class representing a node in the search tree. Stores tree search stats.
  */
-public class MonteCarloNode {
-    private final Action action;
-    private final State state;
-
-    // MonteCarlo stuff
+public class MonteCarloNode extends Node<State, Action> {
     int numberOfSimulations = 0;
-    double actionValue = 0;
+    double rewards = 0;
 
-    // Tree stuff
-    private final MonteCarloNode parent;
-    @Getter
-    private final Map<Action, MonteCarloChild> children = new HashMap<>();
+    int nodeToExpand = 0;
 
     public MonteCarloNode(MonteCarloNode parent, Action action, State state, Iterable<Action> unexpandedActions) {
-        this.action = action;
-        this.state = state;
-        this.parent = parent;
+        super(parent, state, action);
 
         for (Action a : unexpandedActions) {
-            children.put(a, new MonteCarloChild(a));
+            addChild(a);
+            nodeToExpand++;
         }
+    }
+
+    public boolean hasChildNode(Action action) {
+        Child<State, Action> child = getChild(action);
+        return child != null && child.getNode() != null;
     }
 
     /***
      * Get the MonteCarloNode corresponding to the given action.
      */
     public MonteCarloNode getChildNode(Action action) {
-        MonteCarloChild child = children.get(action);
+        Child<State, Action> child = getChild(action);
 
         if (child == null)
             throw new RuntimeException("No such action!");
         if (child.getNode() == null)
             throw new RuntimeException("Child is not expanded!");
 
-        return child.getNode();
+        return (MonteCarloNode) child.getNode();
     }
 
     /***
@@ -58,112 +50,77 @@ public class MonteCarloNode {
      *           Remove the action from the array of unexpanded plays.
      */
     public MonteCarloNode expand(Action action, State childState, Iterable<Action> childUnexpandedMoves) {
-        if (!children.containsKey(action)) throw new RuntimeException("No such action!");
+        Child<State, Action> child = getChild(action);
+        if (child == null) throw new RuntimeException("No such action!");
+        if (child.getNode() != null) throw new RuntimeException("Node already expanded!");
 
         MonteCarloNode childNode = new MonteCarloNode(this, action, childState, childUnexpandedMoves);
-        children.put(action, new MonteCarloChild(action, childNode));
+        addChild(childNode);
+        nodeToExpand--;
 
         return childNode;
+    }
+
+    public void visit(){
+        numberOfSimulations ++;
+    }
+
+    public void updateValue(double reward){
+        rewards += reward;
     }
 
     /***
      * Get all legal moves from this node.
      */
     public Stream<Action> getAllActions() {
-        return children.values().stream().map(MonteCarloChild::getAction);
+        return getChildren().map(Child::getLink);
     }
 
     /***
      * Get all unexpanded legal actions from this node.
      */
     public Stream<Action> getUnexpandedActions() {
-        return children.values().stream().filter(child -> child.getNode() == null).map(MonteCarloChild::getAction);
+        return getChildren().filter(child -> child.getNode() == null).map(Child::getLink);
     }
 
     public Stream<MonteCarloNode> getExpandedNodes() {
-        return children.values().stream().map(MonteCarloChild::getNode).filter(Objects::nonNull);
+        return getChildren().map(child -> (MonteCarloNode) child.getNode()).filter(Objects::nonNull);
     }
 
     public boolean isFullyExpanded() {
-        return children.values().stream().allMatch(child -> child.getNode() != null);
+        return nodeToExpand == 0;
     }
 
     /***
      * Whether self node is terminal in the game tree, NOT INCLUSIVE of termination due to winning.
      */
+    @Override
     public boolean isLeaf() {
-        return children.isEmpty();
+        return super.isLeaf();
     }
 
-    public double score(MonteCarloSelectionScoreStrategy scoreStrategy) {
-        return scoreStrategy.score(this);
+    @Override
+    public Stream<Child<State, Action>> getChildren() {
+        return super.getChildren();
     }
-
 
     public Action getAction() {
-        return this.action;
+        return this.link;
     }
 
     public State getState() {
-        return this.state;
+        return getKey();
     }
 
     public MonteCarloNode getParent() {
-        return this.parent;
+        return (MonteCarloNode) this.parent;
     }
 
     public int numberOfSimulations() {
         return this.numberOfSimulations;
     }
 
-    public double getActionValue() {
-        return this.actionValue;
+    public double getRewards() {
+        return this.rewards;
     }
-
-    static final class MonteCarloChild {
-        private final Action action;
-        private final MonteCarloNode node;
-
-        public MonteCarloChild(Action action) {
-            this(action, null);
-        }
-
-        public MonteCarloChild(Action action, MonteCarloNode node) {
-            this.action = action;
-            this.node = node;
-        }
-
-        public Action getAction() {
-            return this.action;
-        }
-
-        public MonteCarloNode getNode() {
-            return this.node;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-
-            if (!(o instanceof MonteCarloChild)) return false;
-
-            MonteCarloChild that = (MonteCarloChild) o;
-
-            return new EqualsBuilder().append(action, that.action).append(node, that.node).isEquals();
-        }
-
-        @Override
-        public int hashCode() {
-            return new HashCodeBuilder(17, 37).append(action).append(node).toHashCode();
-        }
-
-        @Override
-        public String toString() {
-            return "MonteCarloChild{" +
-                    "action=" + action +
-                    ", node=" + node +
-                    '}';
-        }
-    }
-
 }

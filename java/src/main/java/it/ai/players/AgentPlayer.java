@@ -21,7 +21,7 @@ public class AgentPlayer implements Player {
 
     @Override
     public Action getAction(State state) {
-        state = agent.updateState(state);
+        state = agent.updateStateWithOpponentAction(state);
         return agent.getAction(state);
     }
 }

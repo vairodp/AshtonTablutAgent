@@ -91,10 +91,10 @@ public class Main {
 
             State state = client.getState();
             String winner = state.getTurn();
-            logger.info("Winner:\n" + winner);
+            logger.info("Winner: " + winner);
             state.setTurn(playerTeam);
             it.ai.game.State gameState = mapper.mapToGameState(state);
-            agent.updateState(gameState);
+            agent.updateStateWithOpponentAction(gameState);
 
         } catch (Exception e) {
             logger.log(Level.SEVERE, "An exception was thrown", e);

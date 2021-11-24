@@ -7,7 +7,7 @@ public interface Agent {
     /***
      * Update state after an opponent move
      */
-    State updateState(State state);
+    State updateStateWithOpponentAction(State state);
 
     /***
      * Get action from given state

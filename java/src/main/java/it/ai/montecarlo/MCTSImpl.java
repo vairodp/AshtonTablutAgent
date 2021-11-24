@@ -128,7 +128,7 @@ public class MCTSImpl extends AbstractMCTS {
         long total = node.getAllActions().count();
         long expanded = total - unexpanded;
         logger.fine("Expanded = " + expanded + " / " + total);
-        logger.fine("n_simulations " + node.numberOfSimulations() + ", action_value " + node.getActionValue());
+        logger.fine("n_simulations " + node.numberOfSimulations() + ", action_value " + node.getRewards());
     }
 
     /***
@@ -139,15 +139,16 @@ public class MCTSImpl extends AbstractMCTS {
         MonteCarloNode node = rootNode;
 
         while (node.isFullyExpanded() && !node.isLeaf()) {
-
-            MonteCarloNode finalNode = node;
-            Action bestAction = MathUtils.argmax(node.getAllActions()::iterator,
-                    action -> finalNode.getChildNode(action).score(selectionScoreStrategy));
-
+            Action bestAction = applySelectionPolicy(node);
             node = node.getChildNode(bestAction);
         }
 
         return node;
+    }
+
+    protected Action applySelectionPolicy(MonteCarloNode node){
+        return MathUtils.argmax(node.getAllActions()::iterator,
+                action -> selectionScoreStrategy.score(node.getChildNode(action)));
     }
 
     /***
@@ -211,8 +212,7 @@ public class MCTSImpl extends AbstractMCTS {
         int nextPlayer = game.nextPlayer(winner);
 
         while (node != null) {
-            node.numberOfSimulations += 1;
-
+            node.visit();
             incrementScore(node, winner, nextPlayer);
 
 //            incrementRaveScore();
@@ -235,7 +235,7 @@ public class MCTSImpl extends AbstractMCTS {
         else
             reward = winScoreStrategy.loseScore();
 
-        node.actionValue += reward;
+        node.updateValue(reward);
     }
 
     private Map<Integer, Set<Coords>> getCellsOccupiedByPlayers(State state) {
@@ -265,16 +265,19 @@ public class MCTSImpl extends AbstractMCTS {
     @Override
     public MonteCarloStats getStats() {
         MonteCarloNode node = rootNode;
-        MonteCarloStats stats = new MonteCarloStats(node.numberOfSimulations, node.actionValue);
+        MonteCarloStats stats = new MonteCarloStats(node.numberOfSimulations(), node.getRewards());
 
-        for (MonteCarloNode.MonteCarloChild child : node.getChildren().values()) {
+        node.getChildren().forEach(child -> {
             if (child.getNode() == null)
-                stats.getChildren().add(new MonteCarloNodeStats(child.getAction()));
-            else
+                stats.getChildren().add(new MonteCarloNodeStats(child.getLink()));
+            else {
+                MonteCarloNode childNode = (MonteCarloNode) child.getNode();
                 stats.getChildren().add(
-                        new MonteCarloNodeStats(child.getAction(),
-                                child.getNode().numberOfSimulations, child.getNode().actionValue));
-        }
+                        new MonteCarloNodeStats(childNode.getAction(),
+                                childNode.numberOfSimulations(), childNode.getRewards()));
+            }
+        });
+
         return stats;
     }
 

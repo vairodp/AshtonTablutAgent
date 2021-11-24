@@ -89,8 +89,8 @@ public class MCTSRootParallelization implements MCTS {
 
         for (MCTS mcts : mctsInstances) {
             MonteCarloNode node = mcts.getRootNode();
-            actionValue += node.getActionValue() * node.numberOfSimulations;
-            numberOfSimulations += node.numberOfSimulations;
+            actionValue += node.getRewards() * node.numberOfSimulations();
+            numberOfSimulations += node.numberOfSimulations();
         }
         actionValue /= numberOfSimulations;
         MonteCarloStats stats = new MonteCarloStats(numberOfSimulations, actionValue);
@@ -118,8 +118,8 @@ public class MCTSRootParallelization implements MCTS {
 
         for (MCTS mcts : mctsInstances) {
             MonteCarloNode childNode = mcts.getRootNode().getChildNode(action);
-            score += mcts.getActionScore(action) * childNode.numberOfSimulations;
-            numberOfSimulations += childNode.numberOfSimulations;
+            score += mcts.getActionScore(action) * childNode.numberOfSimulations();
+            numberOfSimulations += childNode.numberOfSimulations();
         }
 
         return score / numberOfSimulations;
