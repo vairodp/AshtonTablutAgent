@@ -39,7 +39,7 @@ public class AshtonTablutGame implements Game {
     //    /***
 //     * Return all the possible actions from the given state.
 //     */
-//    @Override
+    @Override
     public List<it.ai.game.Action> getValidActions(State _state) {
         TablutState state = (TablutState) _state;
         Board board = state.getBoard();
@@ -63,6 +63,59 @@ public class AshtonTablutGame implements Game {
 
         return validActions;
     }
+
+//    public List<it.ai.game.Action> getValidActions(State _state) {
+//        TablutState state = (TablutState) _state;
+//        Board board = state.getBoard();
+//        List<it.ai.game.Action> validActions = new ArrayList<>();
+//
+//        List<Coords> currentPlayerPawnPositions = getPlayerPawnCells(board, state.getTurn());
+//
+//        for (Coords pawnPosition : currentPlayerPawnPositions) {
+//            addValidActionsFromPosition(state, board, validActions, pawnPosition);
+//        }
+//
+//        return validActions;
+//    }
+//
+//    private void addValidActionsFromPosition(TablutState state, Board board, List<it.ai.game.Action> validActions, Coords position) {
+//        int itemsOnTop = position.getRow();
+//        for (int i = 0; i < itemsOnTop; i++) {
+//            Coords coords = position.top();
+//            Action action = new Action(position, coords);
+//            if (!isValidAction(state, action))
+//                break;
+//
+//            validActions.add(action);
+//        }
+//        int itemsOnBottom = board.numberOfRows() - position.getRow() - 1;
+//        for (int i = 0; i < itemsOnBottom; i++) {
+//            Coords coords = position.bottom();
+//            Action action = new Action(position, coords);
+//            if (!isValidAction(state, action))
+//                break;
+//
+//            validActions.add(action);
+//        }
+//        int itemsOnLeft = position.getColumn();
+//        for (int i = 0; i < itemsOnLeft; i++) {
+//            Coords coords = position.left();
+//            Action action = new Action(position, coords);
+//            if (!isValidAction(state, action))
+//                break;
+//
+//            validActions.add(action);
+//        }
+//        int itemsOnRight = board.numberOfColumns() - position.getColumn() - 1;
+//        for (int i = 0; i < itemsOnRight; i++) {
+//            Coords coords = position.right();
+//            Action action = new Action(position, coords);
+//            if (!isValidAction(state, action))
+//                break;
+//
+//            validActions.add(action);
+//        }
+//    }
 
 
     private boolean noValidActions(TablutState state) {

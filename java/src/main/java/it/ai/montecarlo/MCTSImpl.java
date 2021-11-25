@@ -7,8 +7,8 @@ import it.ai.game.Game;
 import it.ai.game.State;
 import it.ai.montecarlo.MonteCarloStats.MonteCarloNodeStats;
 import it.ai.montecarlo.strategies.bestaction.MonteCarloBestActionStrategy;
-import it.ai.montecarlo.strategies.selection.MonteCarloSelectionScoreStrategy;
 import it.ai.montecarlo.strategies.reward.RewardStrategy;
+import it.ai.montecarlo.strategies.selection.MonteCarloSelectionScoreStrategy;
 import it.ai.montecarlo.termination.TerminationCondition;
 import it.ai.util.MathUtils;
 import it.ai.util.RandomUtils;
@@ -48,13 +48,12 @@ public class MCTSImpl extends AbstractMCTS {
      *
      * @param state The state to make a dangling node for; its parent is set to null.
      */
-    public void createRootNode(State state) {
-//        if (!nodes.containsKey(state)) {
-        Iterable<Action> unexpandedActions = game.getValidActions(state);
-        MonteCarloNode node = new MonteCarloNode(null, null, state, unexpandedActions);
-//            nodes.put(state, node);
-        rootNode = node;
-//        }
+    protected void createRootNode(State state) {
+        if (rootNode == null || !rootNode.getState().equals(state)) {
+            Iterable<Action> unexpandedActions = game.getValidActions(state);
+            MonteCarloNode node = new MonteCarloNode(null, null, state, unexpandedActions);
+            rootNode = node;
+        }
     }
 
 //    public void updateNodes(State state) {
@@ -211,10 +210,6 @@ public class MCTSImpl extends AbstractMCTS {
      */
     @Override
     protected void backpropagation(MonteCarloNode node, int winner) {
-//        Map<Integer, Set<Coords>> cellsOccupiedByPlayers = new HashMap<>();
-//        if (finalState != null)
-//            cellsOccupiedByPlayers = getCellsOccupiedByPlayers(finalState);
-
         int parentPlayer = game.previousPlayer(winner);
 
         while (node != null) {
@@ -228,18 +223,21 @@ public class MCTSImpl extends AbstractMCTS {
     }
 
     protected void updateReward(MonteCarloNode node, int winner, int parentPlayer) {
-        double reward;
-        if (winner == Constants.Outcome.DRAW)
-            reward = rewardStrategy.drawReward();
-
-            //Score of child node is used by the parent.
-            //Therefore, we increment the child node score if the parent player has won.
-        else if (node.getState().isPlayerTurn(parentPlayer))
-            reward = rewardStrategy.winReward();
-        else
-            reward = rewardStrategy.loseReward();
+        double reward = getReward(node, winner, parentPlayer);
 
         node.addReward(reward);
+    }
+
+    protected double getReward(MonteCarloNode node, int winner, int parentPlayer) {
+        if (winner == Constants.Outcome.DRAW)
+            return rewardStrategy.drawReward();
+
+        //Score of child node is used by the parent.
+        //Therefore, we increment the child node score if the parent player has won.
+        if (node.getState().isPlayerTurn(parentPlayer))
+            return rewardStrategy.winReward();
+
+        return rewardStrategy.loseReward();
     }
 
     protected void updateHeuristicValue(MonteCarloNode node, int parentPlayer) {

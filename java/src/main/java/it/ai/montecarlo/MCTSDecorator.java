@@ -15,11 +15,6 @@ public class MCTSDecorator extends AbstractMCTS {
     }
 
     @Override
-    public MonteCarloNode getRootNode() {
-        return mcts.getRootNode();
-    }
-
-    @Override
     public double getActionScore(Action action) {
         return mcts.getActionScore(action);
     }
@@ -42,6 +37,11 @@ public class MCTSDecorator extends AbstractMCTS {
     @Override
     public void runSearch(State state, Supplier<TerminationCondition> terminationConditionFactory) {
         mcts.runSearch(state, terminationConditionFactory);
+    }
+
+    @Override
+    protected void createRootNode(State state) {
+        mcts.createRootNode(state);
     }
 
     /***
@@ -87,7 +87,6 @@ public class MCTSDecorator extends AbstractMCTS {
 
     /***
      * Return MCTS statistics for this node and children nodes.
-     * @param state
      */
     @Override
     public MonteCarloStats getStats() {

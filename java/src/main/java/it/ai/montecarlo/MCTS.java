@@ -7,8 +7,6 @@ import it.ai.montecarlo.termination.TerminationCondition;
 import java.util.function.Supplier;
 
 public interface MCTS {
-    MonteCarloNode getRootNode();
-
     double getActionScore(Action action);
 
     /***

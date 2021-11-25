@@ -3,8 +3,6 @@ package it.ai.montecarlo.heuristics;
 import it.ai.game.State;
 import lombok.Getter;
 
-import java.util.Collection;
-
 public class AggregateHeuristic implements HeuristicEvaluation {
     private final WeightedHeuristic[] heuristics;
 
@@ -30,7 +28,7 @@ public class AggregateHeuristic implements HeuristicEvaluation {
         final HeuristicEvaluation heuristic;
 
         public WeightedHeuristic(double weight, HeuristicEvaluation heuristic) {
-            this.weight = weight;
+            this.weight = weight / 100;
             this.heuristic = heuristic;
         }
     }

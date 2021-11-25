@@ -2,7 +2,6 @@ package it.ai;
 
 import it.ai.agents.Agent;
 import it.ai.agents.MctsAgent;
-import it.ai.client.TablutClient;
 import it.ai.game.Action;
 import it.ai.game.Game;
 import it.ai.game.tablut.ashton.AshtonTablutGame;
@@ -17,51 +16,24 @@ import it.ai.montecarlo.heuristics.black.WhiteEaten;
 import it.ai.montecarlo.heuristics.white.*;
 import it.ai.montecarlo.strategies.bestaction.MaxChildStrategy;
 import it.ai.montecarlo.strategies.qvalue.HeuristicQValue;
-import it.ai.montecarlo.strategies.qvalue.IncreasingAlpha;
 import it.ai.montecarlo.strategies.qvalue.QEvaluation;
 import it.ai.montecarlo.strategies.reward.DefaultRewardStrategy;
 import it.ai.montecarlo.strategies.selection.Ucb1SelectionScoreStrategy;
 import it.ai.montecarlo.termination.TimeoutTerminationCondition;
 import it.ai.players.AgentPlayer;
-import it.ai.protocol.State;
 import it.ai.protocol.Turn;
-import it.ai.util.AshtonMapper;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.logging.*;
 
-public class Main {
-//    private static boolean check(State state, Action action, int pawn){
-//        Board board = ((TablutState)state).getBoard();
-//        return checkBoard(board) && checkMovedPawn(board, action,pawn);
-//    }
-//    private static boolean checkMovedPawn(Board board, Action action, int pawn) {
-//        int from = board.get(action.getFrom());
-//        return (from == Pawn.EMPTY || from == Pawn.THRONE) &&  Pawn.getOwner(board.get(action.getTo())) == pawn;
-//    }
-//
-//    private static boolean checkBoard(Board board) {
-//        if (isDifferent(board, Pawn.BLACK)) return false;
-//        if (isDifferent(board, Pawn.WHITE)) return false;
-//        if (isDifferent(board, Pawn.KING)) return false;
-//        return true;
-//    }
-//
-//    private static boolean isDifferent(Board board, int pawn) {
-//        for (Coords coords : board.getPawnCoords(pawn)) {
-//            if (board.get(coords) != pawn)
-//                return true;
-//        }
-//        return false;
-//    }
-
+public class Profile {
     public static void main(String[] args) throws Exception {
-        Logger logger = Logger.getLogger(Main.class.getName());
+        Logger logger = Logger.getLogger(Profile.class.getName());
         String playerName = "AI";
         String playerTeam = Turn.BLACK;
-        int timeout_s = 55;
+        int timeout_s = 10;
 
         double alpha = 0.4;
         double exploration = 1.4;
@@ -74,7 +46,7 @@ public class Main {
         Game game = new AshtonTablutGame(0);
 
 //        QEvaluation qEvaluation = new WinProbabilityQValue();
-        QEvaluation qEvaluation = new HeuristicQValue(new IncreasingAlpha());
+        QEvaluation qEvaluation = new HeuristicQValue(alpha);
         HeuristicEvaluation heuristicEvaluation = buildHeuristic();
 //        AbstractMCTS mctsImpl = new MCTSImpl(game,
 //                new Ucb1SelectionScoreStrategy(exploration, qEvaluation),
@@ -98,18 +70,9 @@ public class Main {
         Agent agent = new MctsAgent(game, mcts, () -> new TimeoutTerminationCondition(timeout_s));
         Player player = new AgentPlayer(playerName, playerTeam, agent);
 
-        Mapper mapper = new AshtonMapper();
-        TablutClient client = new TablutClient(player, mapper, "127.0.0.1");
 
         try {
-            client.run();
-
-            State state = client.getState();
-            String winner = state.getTurn();
-            logger.info("Winner: " + winner);
-            state.setTurn(playerTeam);
-            it.ai.game.State gameState = mapper.mapToGameState(state);
-            agent.updateStateWithOpponentAction(gameState);
+            Action bestAction = player.getAction(game.start());
 
         } catch (Exception e) {
             logger.log(Level.SEVERE, "An exception was thrown", e);
@@ -131,9 +94,9 @@ public class Main {
 
         AggregateHeuristic blackHeuristic = new AggregateHeuristic(new AggregateHeuristic.WeightedHeuristic[]{
                 new AggregateHeuristic.WeightedHeuristic(30, new BlackAlive()),
-                new AggregateHeuristic.WeightedHeuristic(48, new WhiteEaten()),
+                new AggregateHeuristic.WeightedHeuristic(45, new WhiteEaten()),
                 new AggregateHeuristic.WeightedHeuristic(20, new BlackSurroundKing()),
-                new AggregateHeuristic.WeightedHeuristic(2, new BlackOnRhombus()),
+                new AggregateHeuristic.WeightedHeuristic(5, new BlackOnRhombus()),
 
         });
 

@@ -1,10 +1,18 @@
 package it.ai.montecarlo;
 
 import it.ai.game.State;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Optional;
 
 public abstract class AbstractMCTS implements MCTS {
+
+    @Getter
+    @Setter
+    protected MonteCarloNode rootNode;
+
+    protected abstract void createRootNode(State state);
 
     /***
      * Phase 1, Selection: Select until not fully expanded OR leaf.

@@ -17,10 +17,10 @@ import java.util.logging.Logger;
 public class MCTSRootParallelization implements MCTS {
     private final Logger logger = Logger.getLogger(MCTSImpl.class.getName());
 
-    private final List<MCTS> mctsInstances;
+    private final List<AbstractMCTS> mctsInstances;
     private final ExecutorService threadPool;
 
-    public MCTSRootParallelization(Supplier<MCTS> mctsFactory, int numberOfCores) {
+    public MCTSRootParallelization(Supplier<AbstractMCTS> mctsFactory, int numberOfCores) {
         this.mctsInstances = new ArrayList<>();
         this.threadPool = Executors.newWorkStealingPool(numberOfCores);
 
@@ -28,7 +28,7 @@ public class MCTSRootParallelization implements MCTS {
             mctsInstances.add(mctsFactory.get());
     }
 
-    public MCTSRootParallelization(Supplier<MCTS> mctsFactory) {
+    public MCTSRootParallelization(Supplier<AbstractMCTS> mctsFactory) {
         this(mctsFactory, Runtime.getRuntime().availableProcessors());
     }
 
@@ -88,7 +88,7 @@ public class MCTSRootParallelization implements MCTS {
         double heuristicValue = 0;
         int numberOfSimulations = 0;
 
-        for (MCTS mcts : mctsInstances) {
+        for (AbstractMCTS mcts : mctsInstances) {
             MonteCarloNode node = mcts.getRootNode();
             actionValue += node.getRewards() * node.getNumberOfSimulations();
             heuristicValue += node.getHeuristicValue() * node.getNumberOfSimulations();
@@ -108,17 +108,13 @@ public class MCTSRootParallelization implements MCTS {
         return stats;
     }
 
-    @Override
-    public MonteCarloNode getRootNode() {
-        return null;
-    }
 
     @Override
     public double getActionScore(Action action) {
         double score = 0;
         int numberOfSimulations = 0;
 
-        for (MCTS mcts : mctsInstances) {
+        for (AbstractMCTS mcts : mctsInstances) {
             MonteCarloNode childNode = mcts.getRootNode().getChildNode(action);
             score += mcts.getActionScore(action) * childNode.getNumberOfSimulations();
             numberOfSimulations += childNode.getNumberOfSimulations();
