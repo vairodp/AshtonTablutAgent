@@ -1,4 +1,4 @@
-package it.ai.montecarlo.strategies.score;
+package it.ai.montecarlo.strategies.selection;
 
 import it.ai.montecarlo.MonteCarloNode;
 

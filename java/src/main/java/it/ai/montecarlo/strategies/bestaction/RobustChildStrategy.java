@@ -5,6 +5,6 @@ import it.ai.montecarlo.MonteCarloNode;
 public class RobustChildStrategy implements MonteCarloBestActionStrategy {
     @Override
     public double score(MonteCarloNode node) {
-        return node.numberOfSimulations();
+        return node.getNumberOfSimulations();
     }
 }

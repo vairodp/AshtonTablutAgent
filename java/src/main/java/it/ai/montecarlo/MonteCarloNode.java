@@ -3,6 +3,8 @@ package it.ai.montecarlo;
 import it.ai.game.Action;
 import it.ai.game.State;
 import it.ai.tree.Node;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -11,8 +13,13 @@ import java.util.stream.Stream;
  * Class representing a node in the search tree. Stores tree search stats.
  */
 public class MonteCarloNode extends Node<State, Action> {
+    @Getter
     int numberOfSimulations = 0;
+    @Getter
     double rewards = 0;
+    @Getter
+    @Setter
+    double heuristicValue = 0;
 
     int nodeToExpand = 0;
 
@@ -61,11 +68,11 @@ public class MonteCarloNode extends Node<State, Action> {
         return childNode;
     }
 
-    public void visit(){
-        numberOfSimulations ++;
+    public void visit() {
+        numberOfSimulations++;
     }
 
-    public void updateValue(double reward){
+    public void addReward(double reward) {
         rewards += reward;
     }
 
@@ -114,13 +121,5 @@ public class MonteCarloNode extends Node<State, Action> {
 
     public MonteCarloNode getParent() {
         return (MonteCarloNode) this.parent;
-    }
-
-    public int numberOfSimulations() {
-        return this.numberOfSimulations;
-    }
-
-    public double getRewards() {
-        return this.rewards;
     }
 }

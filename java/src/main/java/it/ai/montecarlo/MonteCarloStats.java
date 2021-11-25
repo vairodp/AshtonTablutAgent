@@ -1,6 +1,7 @@
 package it.ai.montecarlo;
 
 import it.ai.game.Action;
+import lombok.Getter;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -8,99 +9,50 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 public final class MonteCarloStats {
+    @Getter
     private final int numberOfSimulations;
-    private final double actionValue;
-
+    @Getter
+    private final double rewards;
+    @Getter
+    private final double heuristicValue;
+    @Getter
     private final Collection<MonteCarloNodeStats> children = new ArrayList<>();
 
-    public MonteCarloStats(int numberOfSimulations, double actionValue) {
+    public MonteCarloStats(int numberOfSimulations, double rewards, double heuristicValue) {
         this.numberOfSimulations = numberOfSimulations;
-        this.actionValue = actionValue;
-    }
-
-    public int getNumberOfSimulations() {
-        return this.numberOfSimulations;
-    }
-
-    public double getActionValue() {
-        return this.actionValue;
-    }
-
-    public Collection<MonteCarloNodeStats> getChildren() {
-        return this.children;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-
-        if (!(o instanceof MonteCarloStats)) return false;
-
-        MonteCarloStats that = (MonteCarloStats) o;
-
-        return new EqualsBuilder()
-                .append(numberOfSimulations, that.numberOfSimulations)
-                .append(actionValue, that.actionValue)
-                .append(children, that.children).isEquals();
-    }
-
-    @Override
-    public int hashCode() {
-        return new HashCodeBuilder(17, 37)
-                .append(numberOfSimulations).append(actionValue)
-                .append(children).toHashCode();
+        this.rewards = rewards;
+        this.heuristicValue = heuristicValue;
     }
 
     @Override
     public String toString() {
         return "MonteCarloStats{" +
                 "numberOfSimulations=" + numberOfSimulations +
-                ", actionValue=" + actionValue +
+                ", rewards=" + rewards +
+                ", heuristicValue=" + heuristicValue +
                 ", children=" + children +
                 '}';
     }
 
     public static final class MonteCarloNodeStats {
+        @Getter
         private final Action action;
+        @Getter
         private final int numberOfSimulations;
-        private final double actionValue;
+        @Getter
+        private final double rewards;
+        @Getter
+        private final double heuristicValue;
 
-        public MonteCarloNodeStats(Action action, int numberOfSimulations, double actionValue) {
+        public MonteCarloNodeStats(Action action, int numberOfSimulations, double rewards, double heuristicValue) {
             this.action = action;
             this.numberOfSimulations = numberOfSimulations;
-            this.actionValue = actionValue;
+            this.rewards = rewards;
+            this.heuristicValue = heuristicValue;
         }
 
         public MonteCarloNodeStats(Action action) {
-            this(action, 0, 0);
-        }
-
-        public Action getAction() {
-            return this.action;
-        }
-
-        public int getNumberOfSimulations() {
-            return this.numberOfSimulations;
-        }
-
-        public double getActionValue() {
-            return this.actionValue;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-
-            if (!(o instanceof MonteCarloNodeStats)) return false;
-
-            MonteCarloNodeStats that = (MonteCarloNodeStats) o;
-
-            return new EqualsBuilder().append(numberOfSimulations, that.numberOfSimulations).append(actionValue, that.actionValue).append(action, that.action).isEquals();
-        }
-
-        @Override
-        public int hashCode() {
-            return new HashCodeBuilder(17, 37).append(action).append(numberOfSimulations).append(actionValue).toHashCode();
+            this(action, 0, 0, 0);
         }
 
         @Override
@@ -108,7 +60,8 @@ public final class MonteCarloStats {
             return "MonteCarloNodeStats{" +
                     "action=" + action +
                     ", numberOfSimulations=" + numberOfSimulations +
-                    ", actionValue=" + actionValue +
+                    ", rewards=" + rewards +
+                    ", heuristicValue=" + heuristicValue +
                     '}';
         }
     }

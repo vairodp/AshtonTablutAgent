@@ -89,6 +89,22 @@ public class Board implements Cloneable, Serializable {
         return getCitadels().contains(new Coords(row, column));
     }
 
+    public boolean isOnEdges(Coords coords) {
+        return isOnEdges(coords.getRow(), coords.getColumn());
+    }
+
+    public boolean isOnEdges(int row, int column) {
+        return row == 0 || row == numberOfRows() - 1 || column == 0 || column == numberOfColumns() - 1;
+    }
+
+    public boolean isEmpty(Coords coords) {
+        return get(coords) == Pawn.EMPTY;
+    }
+
+    public boolean isEmpty(int row, int column) {
+        return get(row, column) == Pawn.EMPTY;
+    }
+
     public int count(int pawn) {
         Set<Coords> cells = pawnCoords.get(pawn);
         if (cells != null)

@@ -6,13 +6,22 @@ import it.ai.client.TablutClient;
 import it.ai.game.Action;
 import it.ai.game.Game;
 import it.ai.game.tablut.ashton.AshtonTablutGame;
-import it.ai.montecarlo.AbstractMCTS;
 import it.ai.montecarlo.MCTS;
-import it.ai.montecarlo.MCTSImpl;
+import it.ai.montecarlo.MCTSMinMax;
 import it.ai.montecarlo.NeuralNetworkMonteCarlo;
+import it.ai.montecarlo.heuristics.AggregateHeuristic;
+import it.ai.montecarlo.heuristics.BlackAndWhiteHeuristic;
+import it.ai.montecarlo.heuristics.HeuristicEvaluation;
+import it.ai.montecarlo.heuristics.black.BlackAlive;
+import it.ai.montecarlo.heuristics.black.BlackOnRhombus;
+import it.ai.montecarlo.heuristics.black.BlackSurroundKing;
+import it.ai.montecarlo.heuristics.black.WhiteEaten;
+import it.ai.montecarlo.heuristics.white.*;
 import it.ai.montecarlo.strategies.bestaction.MaxChildStrategy;
-import it.ai.montecarlo.strategies.score.Ucb1SelectionScoreStrategy;
-import it.ai.montecarlo.strategies.winscore.DefaultWinScoreStrategy;
+import it.ai.montecarlo.strategies.qvalue.HeuristicQValue;
+import it.ai.montecarlo.strategies.qvalue.QEvaluation;
+import it.ai.montecarlo.strategies.reward.DefaultRewardStrategy;
+import it.ai.montecarlo.strategies.selection.Ucb1SelectionScoreStrategy;
 import it.ai.montecarlo.termination.TimeoutTerminationCondition;
 import it.ai.neuralnetworks.ValueNeuralNetwork;
 import it.ai.players.AgentPlayer;
@@ -57,17 +66,27 @@ public class Main {
         String playerName = "AI";
         String playerTeam = Turn.BLACK;
 
-        double exploration = 2;
+        double alpha = 0.26;
+        double exploration = 1.4;
         double networkThreshold = 0.6;
 
         configureLogger();
 
         Game game = new AshtonTablutGame(0);
 
-        AbstractMCTS mctsImpl = new MCTSImpl(game,
-                new Ucb1SelectionScoreStrategy(exploration),
+//        QEvaluation qEvaluation = new WinProbabilityQValue();
+        QEvaluation qEvaluation = new HeuristicQValue(alpha);
+        HeuristicEvaluation heuristicEvaluation = buildHeuristic();
+//        AbstractMCTS mctsImpl = new MCTSImpl(game,
+//                new Ucb1SelectionScoreStrategy(exploration, qEvaluation),
+//                new MaxChildStrategy(),
+//                new DefaultRewardStrategy());
+
+        MCTSMinMax mctsImpl = new MCTSMinMax(game,
+                new Ucb1SelectionScoreStrategy(exploration, qEvaluation),
                 new MaxChildStrategy(),
-                new DefaultWinScoreStrategy());
+                new DefaultRewardStrategy(),
+                heuristicEvaluation);
 
         MCTS mcts = new NeuralNetworkMonteCarlo(mctsImpl,
                 new ValueNeuralNetwork(blackNN), new ValueNeuralNetwork(whiteNN), networkThreshold);
@@ -102,6 +121,27 @@ public class Main {
             Iterable<Action> actions = agent.getActions();
             logger.info("Action history:\n" + actions);
         }
+    }
+
+    private static HeuristicEvaluation buildHeuristic() {
+        AggregateHeuristic whiteHeuristic = new AggregateHeuristic(new AggregateHeuristic.WeightedHeuristic[]{
+                new AggregateHeuristic.WeightedHeuristic(2, new WhiteWellPositioned()),
+                new AggregateHeuristic.WeightedHeuristic(20, new BlackEaten()),
+                new AggregateHeuristic.WeightedHeuristic(35, new WhiteAlive()),
+                new AggregateHeuristic.WeightedHeuristic(18, new KingEscapes()),
+                new AggregateHeuristic.WeightedHeuristic(7, new RemainingToSurroundKing()),
+                new AggregateHeuristic.WeightedHeuristic(18, new KingProtection())
+        });
+
+        AggregateHeuristic blackHeuristic = new AggregateHeuristic(new AggregateHeuristic.WeightedHeuristic[]{
+                new AggregateHeuristic.WeightedHeuristic(35, new BlackAlive()),
+                new AggregateHeuristic.WeightedHeuristic(48, new WhiteEaten()),
+                new AggregateHeuristic.WeightedHeuristic(15, new BlackSurroundKing()),
+                new AggregateHeuristic.WeightedHeuristic(2, new BlackOnRhombus()),
+
+        });
+
+        return new BlackAndWhiteHeuristic(blackHeuristic, whiteHeuristic);
     }
 
     private static void configureLogger() throws IOException {

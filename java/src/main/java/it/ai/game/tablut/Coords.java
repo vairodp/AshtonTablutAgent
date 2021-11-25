@@ -84,4 +84,20 @@ public final class Coords implements it.ai.game.Coords, Serializable {
     public int getColumn() {
         return this.column;
     }
+
+    public Coords top() {
+        return new Coords(row - 1, column);
+    }
+
+    public Coords bottom() {
+        return new Coords(row + 1, column);
+    }
+
+    public Coords left() {
+        return new Coords(row, column - 1);
+    }
+
+    public Coords right() {
+        return new Coords(row, column + 1);
+    }
 }

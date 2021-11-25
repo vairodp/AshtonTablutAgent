@@ -7,14 +7,17 @@ import it.ai.game.Game;
 import it.ai.game.State;
 import it.ai.montecarlo.MonteCarloStats.MonteCarloNodeStats;
 import it.ai.montecarlo.strategies.bestaction.MonteCarloBestActionStrategy;
-import it.ai.montecarlo.strategies.score.MonteCarloSelectionScoreStrategy;
-import it.ai.montecarlo.strategies.winscore.WinScoreStrategy;
+import it.ai.montecarlo.strategies.selection.MonteCarloSelectionScoreStrategy;
+import it.ai.montecarlo.strategies.reward.RewardStrategy;
 import it.ai.montecarlo.termination.TerminationCondition;
 import it.ai.util.MathUtils;
 import it.ai.util.RandomUtils;
 import lombok.Getter;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
@@ -26,18 +29,18 @@ public class MCTSImpl extends AbstractMCTS {
     protected final Game game;
     protected final MonteCarloSelectionScoreStrategy selectionScoreStrategy;
     protected final MonteCarloBestActionStrategy bestActionStrategy;
-    protected final WinScoreStrategy winScoreStrategy;
+    protected final RewardStrategy rewardStrategy;
 
     @Getter
     protected MonteCarloNode rootNode;
 
-    protected Map<State, MonteCarloNode> nodes = new HashMap<>();
+//    protected Map<State, MonteCarloNode> nodes = new HashMap<>();
 
-    public MCTSImpl(Game game, MonteCarloSelectionScoreStrategy selectionScoreStrategy, MonteCarloBestActionStrategy bestActionStrategy, WinScoreStrategy winScoreStrategy) {
+    public MCTSImpl(Game game, MonteCarloSelectionScoreStrategy selectionScoreStrategy, MonteCarloBestActionStrategy bestActionStrategy, RewardStrategy rewardStrategy) {
         this.game = game;
         this.selectionScoreStrategy = selectionScoreStrategy;
         this.bestActionStrategy = bestActionStrategy;
-        this.winScoreStrategy = winScoreStrategy;
+        this.rewardStrategy = rewardStrategy;
     }
 
     /***
@@ -46,27 +49,27 @@ public class MCTSImpl extends AbstractMCTS {
      * @param state The state to make a dangling node for; its parent is set to null.
      */
     public void createRootNode(State state) {
-        if (!nodes.containsKey(state)) {
-            Iterable<Action> unexpandedActions = game.getValidActions(state);
-            MonteCarloNode node = new MonteCarloNode(null, null, state, unexpandedActions);
+//        if (!nodes.containsKey(state)) {
+        Iterable<Action> unexpandedActions = game.getValidActions(state);
+        MonteCarloNode node = new MonteCarloNode(null, null, state, unexpandedActions);
 //            nodes.put(state, node);
-            rootNode = node;
-        }
+        rootNode = node;
+//        }
     }
 
-    public void updateNodes(State state) {
-        //TODO: usare la libreria java che storicizza in memory e on disk, basta fare map.clearWithExpires(). dbMap
-        MonteCarloNode node = nodes.get(state);
-
-        nodes = new HashMap<>(); //TODO: Forse meglio HashTable
-        if (node != null) {
-            logger.fine("Node found.");
-            nodes = node.getExpandedNodes().collect(
-                    Collectors.toMap(MonteCarloNode::getState, Function.identity()));
-            nodes.put(state, node);
-//            System.gc();
-        }
-    }
+//    public void updateNodes(State state) {
+//        //TODO: usare la libreria java che storicizza in memory e on disk, basta fare map.clearWithExpires(). dbMap
+//        MonteCarloNode node = nodes.get(state);
+//
+//        nodes = new HashMap<>(); //TODO: Forse meglio HashTable
+//        if (node != null) {
+//            logger.fine("Node found.");
+//            nodes = node.getExpandedNodes().collect(
+//                    Collectors.toMap(MonteCarloNode::getState, Function.identity()));
+//            nodes.put(state, node);
+////            System.gc();
+//        }
+//    }
 
     @Override
     public double getActionScore(Action action) {
@@ -115,6 +118,7 @@ public class MCTSImpl extends AbstractMCTS {
             //if the match is not closed and there are possible actions from the selected node
             if (!winner.isPresent() && !node.isLeaf()) {
                 node = expansion(node);
+                node.setHeuristicValue(evaluate(node));
                 winner = simulation(node);
             }
 
@@ -128,7 +132,11 @@ public class MCTSImpl extends AbstractMCTS {
         long total = node.getAllActions().count();
         long expanded = total - unexpanded;
         logger.fine("Expanded = " + expanded + " / " + total);
-        logger.fine("n_simulations " + node.numberOfSimulations() + ", action_value " + node.getRewards());
+        logger.fine("n_simulations " + node.getNumberOfSimulations() + ", action_value " + node.getRewards());
+    }
+
+    protected double evaluate(MonteCarloNode node) {
+        return 0;
     }
 
     /***
@@ -146,7 +154,7 @@ public class MCTSImpl extends AbstractMCTS {
         return node;
     }
 
-    protected Action applySelectionPolicy(MonteCarloNode node){
+    protected Action applySelectionPolicy(MonteCarloNode node) {
         return MathUtils.argmax(node.getAllActions()::iterator,
                 action -> selectionScoreStrategy.score(node.getChildNode(action)));
     }
@@ -168,9 +176,7 @@ public class MCTSImpl extends AbstractMCTS {
 
         //TODO: remove or uncomment
 //        nodes.put(childState, childNode);
-
-        //if child_state.turn == 0:
-        //logger.debug(f'Expanding action {action}, parent = {self._nodes[node.state.history_hash()].action}, turn = {child_state.turn}')
+//
         return childNode;
     }
 
@@ -209,33 +215,34 @@ public class MCTSImpl extends AbstractMCTS {
 //        if (finalState != null)
 //            cellsOccupiedByPlayers = getCellsOccupiedByPlayers(finalState);
 
-        int nextPlayer = game.nextPlayer(winner);
+        int parentPlayer = game.previousPlayer(winner);
 
         while (node != null) {
             node.visit();
-            incrementScore(node, winner, nextPlayer);
-
-//            incrementRaveScore();
-
+            updateReward(node, winner, parentPlayer);
+            updateHeuristicValue(node, parentPlayer);
 
 //            distance.increment();
             node = node.getParent();
         }
     }
 
-    private void incrementScore(MonteCarloNode node, int winner, int nextPlayer) {
+    protected void updateReward(MonteCarloNode node, int winner, int parentPlayer) {
         double reward;
         if (winner == Constants.Outcome.DRAW)
-            reward = winScoreStrategy.drawScore();
+            reward = rewardStrategy.drawReward();
 
             //Score of child node is used by the parent.
             //Therefore, we increment the child node score if the parent player has won.
-        else if (node.getState().isPlayerTurn(nextPlayer))
-            reward = winScoreStrategy.winScore();
+        else if (node.getState().isPlayerTurn(parentPlayer))
+            reward = rewardStrategy.winReward();
         else
-            reward = winScoreStrategy.loseScore();
+            reward = rewardStrategy.loseReward();
 
-        node.updateValue(reward);
+        node.addReward(reward);
+    }
+
+    protected void updateHeuristicValue(MonteCarloNode node, int parentPlayer) {
     }
 
     private Map<Integer, Set<Coords>> getCellsOccupiedByPlayers(State state) {
@@ -243,21 +250,6 @@ public class MCTSImpl extends AbstractMCTS {
                 player -> game.cellsOccupiedBy(state, player).collect(Collectors.toSet())));
     }
 
-    private void incrementRaveScore() {
-//        if (finalState != null) {
-//            Set<Coords> occupiedCells = cellsOccupiedByPlayers.get(node.getState().getTurn());
-//            double finalReward = -reward;
-//            node.getChildrenNodes().forEach(child_node -> {
-//                //If the pawn moved is still in the final state and the player has won (lost), the action was good(bad)
-//                //Therefore, we increase the child score
-//
-//                if (occupiedCells.contains(child_node.getAction().getTo())) {
-//                    child_node.numberOfRave += 1;
-//                    child_node.raveScore += finalReward;
-//                }
-//            });
-//        }
-    }
 
     /***
      * Return MCTS statistics for this node and children nodes.
@@ -265,7 +257,7 @@ public class MCTSImpl extends AbstractMCTS {
     @Override
     public MonteCarloStats getStats() {
         MonteCarloNode node = rootNode;
-        MonteCarloStats stats = new MonteCarloStats(node.numberOfSimulations(), node.getRewards());
+        MonteCarloStats stats = new MonteCarloStats(node.getNumberOfSimulations(), node.getRewards(), node.getHeuristicValue());
 
         node.getChildren().forEach(child -> {
             if (child.getNode() == null)
@@ -274,7 +266,7 @@ public class MCTSImpl extends AbstractMCTS {
                 MonteCarloNode childNode = (MonteCarloNode) child.getNode();
                 stats.getChildren().add(
                         new MonteCarloNodeStats(childNode.getAction(),
-                                childNode.numberOfSimulations(), childNode.getRewards()));
+                                childNode.getNumberOfSimulations(), childNode.getRewards(), childNode.getHeuristicValue()));
             }
         });
 

@@ -247,11 +247,8 @@ public class AshtonTablutGame implements Game {
 
     private boolean isKingOnEdge(TablutState state) {
         Board board = state.getBoard();
-        Coords kingCoords = board.getPawnCoords(Pawn.KING).iterator().next();
-        int row = kingCoords.getRow();
-        int column = kingCoords.getColumn();
-
-        return row == 0 || row == board.numberOfRows() - 1 || column == 0 || column == board.numberOfColumns() - 1;
+        Coords kingPosition = board.getPawnCoords(Pawn.KING).iterator().next();
+        return board.isOnEdges(kingPosition);
     }
 
     private boolean isADraw(TablutState state) {

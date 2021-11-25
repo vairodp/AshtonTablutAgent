@@ -12,6 +12,11 @@ public class AshtonBoard extends Board {
             Coords.A4, Coords.A5, Coords.A6, Coords.B5, Coords.D1, Coords.E1, Coords.F1, Coords.E2, Coords.I4,
             Coords.I5, Coords.I6, Coords.H5, Coords.D9, Coords.E9, Coords.F9, Coords.E8);
 
+    public final static int NUM_BLACK = 16;
+    public final static int NUM_WHITE = 8;
+    public final static int NUM_CITADELS = citadels.size();
+    public final static int NUM_ESCAPES = 16;
+
     public AshtonBoard() {
         this(initialBoard());
     }
