@@ -21,7 +21,7 @@ public class Expansion {
         this.game = game;
     }
 
-    public MonteCarloNode expansion(MonteCarloNode node) {
+    public MonteCarloNode run(MonteCarloNode node) {
         List<Action> unexpandedActions = node.getUnexpandedActions().collect(Collectors.toList());
         if (unexpandedActions.isEmpty())
             logger.severe("Len = 0, state = ".concat(node.getState().toString()));

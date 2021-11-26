@@ -24,9 +24,12 @@ public final class MonteCarloStats {
 
     @Override
     public String toString() {
-        StringBuilder stringBuilder = new StringBuilder("MonteCarloStats{");
-        stringBuilder.append("numberOfSimulations=").append(numberOfSimulations)
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder
+                .append("MonteCarloStats{")
+                .append("numberOfSimulations=").append(numberOfSimulations)
                 .append(", rewards=").append(rewards)
+                .append(", winProbability=").append(1 - (rewards / numberOfSimulations))
                 .append(", heuristicValue=").append(heuristicValue)
                 .append(",\nchildren=[");
 
@@ -62,8 +65,9 @@ public final class MonteCarloStats {
         public String toString() {
             return "MonteCarloNodeStats{" +
                     "action=" + action +
-                    ", numberOfSimulations=" + numberOfSimulations +
+                    "numberOfSimulations=" + numberOfSimulations +
                     ", rewards=" + rewards +
+                    ", winProbability=" + rewards / numberOfSimulations +
                     ", heuristicValue=" + heuristicValue +
                     '}';
         }

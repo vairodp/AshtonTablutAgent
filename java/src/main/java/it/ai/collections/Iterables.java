@@ -1,6 +1,13 @@
 package it.ai.collections;
 
+import lombok.SneakyThrows;
+
 import java.util.Iterator;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Supplier;
 
 public class Iterables {
     public static Iterable<Integer> range(int endExclusive) {
@@ -94,4 +101,34 @@ public class Iterables {
         };
     }
 
+    public static <T> Iterable<T> parallel(Supplier<T> action) {
+        return parallel(action, Runtime.getRuntime().availableProcessors());
+    }
+
+    public static <T> Iterable<T> parallel(Supplier<T> action, int instances) {
+        ExecutorService threadPool = Executors.newWorkStealingPool(instances);
+        ExecutorCompletionService<T> executorCompletionService = new ExecutorCompletionService<>(threadPool);
+        return parallel(action, instances, executorCompletionService);
+    }
+
+    public static <T> Iterable<T> parallel(Supplier<T> action, int instances, CompletionService<T> completionService) {
+        for (int i = 0; i < instances; i++) {
+            completionService.submit(action::get);
+        }
+        return () -> new Iterator<>() {
+            int i = 0;
+
+            @Override
+            public boolean hasNext() {
+                return i < instances;
+            }
+
+            @SneakyThrows
+            @Override
+            public T next() {
+                i++;
+                return completionService.take().get();
+            }
+        };
+    }
 }

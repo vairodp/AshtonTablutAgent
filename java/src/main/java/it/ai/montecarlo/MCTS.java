@@ -70,6 +70,7 @@ public class MCTS implements IMCTS {
         Action bestAction = MathUtils.argmax(rootNode.getAllActions()::iterator, this::getActionScore);
 
         logger.fine("Best action = ".concat(bestAction.toString()));
+        logger.info("Win probability: ".concat(String.valueOf(1 - rootNode.getRewards() / rootNode.getNumberOfSimulations())));
         return bestAction;
     }
 
@@ -101,20 +102,29 @@ public class MCTS implements IMCTS {
     }
 
     protected void search() {
-        MonteCarloNode node = selection.selection(rootNode);
+        MonteCarloNode node = selection.run(rootNode);
         Optional<Integer> winner = game.getWinner(node.getState());
+
+        if (winner.isPresent()) {
+            backpropagation.run(node, winner.get());
+        } else {
+            node = expansion.run(node);
+            Iterable<Integer> winners = simulation.run(node);
+
+            backpropagation.run(node, winners);
+        }
 
 //            DistanceFromFinalState distance = new DistanceFromFinalState();
 
         //if the match is not closed and there are possible actions from the selected node
-        if (!winner.isPresent() && !node.isLeaf()) {
-            node = expansion.expansion(node);
-            winner = simulation.simulation(node);
-        }
-
-        if (!winner.isPresent()) throw new RuntimeException("No actions available.");
-
-        backpropagation.backpropagation(node, winner.get());
+//        if (!winner.isPresent() && !node.isLeaf()) {
+//            node = expansion.expansion(node);
+//            winner = simulation.simulation(node);
+//        }
+//
+//        if (!winner.isPresent()) throw new RuntimeException("No actions available.");
+//
+//        backpropagation.backpropagation(node, winner.get());
     }
 
     /***

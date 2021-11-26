@@ -19,7 +19,12 @@ public class Simulation {
         this.game = game;
     }
 
-    public Optional<Integer> simulation(MonteCarloNode node) {
+    public Iterable<Integer> run(MonteCarloNode node) {
+        int winner = runSingle(node);
+        return List.of(winner);
+    }
+
+    protected Integer runSingle(MonteCarloNode node) {
         State state = node.getState();
         Optional<Integer> winner = game.getWinner(state);
 
@@ -33,8 +38,7 @@ public class Simulation {
             winner = estimateWinner(state);
 //            distance.increment();
         }
-
-        return winner;
+        return winner.get();
     }
 
 

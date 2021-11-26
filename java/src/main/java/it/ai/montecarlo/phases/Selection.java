@@ -15,7 +15,7 @@ public class Selection {
         this.selectionScoreStrategy = selectionScoreStrategy;
     }
 
-    public MonteCarloNode selection(MonteCarloNode rootNode) {
+    public MonteCarloNode run(MonteCarloNode rootNode) {
         MonteCarloNode node = rootNode;
 
         while (node.isFullyExpanded() && !node.isLeaf()) {

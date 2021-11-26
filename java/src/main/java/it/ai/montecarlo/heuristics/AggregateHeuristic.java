@@ -3,6 +3,8 @@ package it.ai.montecarlo.heuristics;
 import it.ai.game.State;
 import lombok.Getter;
 
+import java.util.Arrays;
+
 public class AggregateHeuristic implements HeuristicEvaluation {
     private final WeightedHeuristic[] heuristics;
 
@@ -12,12 +14,18 @@ public class AggregateHeuristic implements HeuristicEvaluation {
 
     @Override
     public double evaluate(State state, int player) {
-        double value = 0;
-        for (WeightedHeuristic weightedHeuristic : heuristics) {
-            value += weightedHeuristic.weight * weightedHeuristic.heuristic.evaluate(state, player);
-        }
+//        double value = 0;
+//        for (WeightedHeuristic weightedHeuristic : heuristics) {
+//            value += getValue(state, player, weightedHeuristic);
+//        }
+//        return value;
+        return Arrays.stream(heuristics).parallel()
+                .map(weightedHeuristic -> getValue(state, player, weightedHeuristic))
+                .reduce(0.0, Double::sum);
+    }
 
-        return value;
+    private double getValue(State state, int player, WeightedHeuristic weightedHeuristic) {
+        return weightedHeuristic.weight * weightedHeuristic.heuristic.evaluate(state, player) / 100;
     }
 
     public static class WeightedHeuristic {
@@ -27,7 +35,7 @@ public class AggregateHeuristic implements HeuristicEvaluation {
         final HeuristicEvaluation heuristic;
 
         public WeightedHeuristic(double weight, HeuristicEvaluation heuristic) {
-            this.weight = weight / 100;
+            this.weight = weight;
             this.heuristic = heuristic;
         }
     }

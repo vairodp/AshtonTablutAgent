@@ -9,18 +9,18 @@ import it.ai.game.Game;
 import it.ai.game.tablut.ashton.AshtonTablutGame;
 import it.ai.montecarlo.IMCTS;
 import it.ai.montecarlo.MCTS;
-import it.ai.montecarlo.MCTSMinMax;
 import it.ai.montecarlo.heuristics.AggregateHeuristic;
 import it.ai.montecarlo.heuristics.HeuristicEvaluation;
 import it.ai.montecarlo.heuristics.black.BlackAlive;
+import it.ai.montecarlo.heuristics.black.BlackOnRhombus;
+import it.ai.montecarlo.heuristics.black.BlackSurroundKing;
 import it.ai.montecarlo.heuristics.black.WhiteEaten;
 import it.ai.montecarlo.heuristics.white.*;
-import it.ai.montecarlo.phases.Backpropagation;
-import it.ai.montecarlo.phases.Expansion;
-import it.ai.montecarlo.phases.Selection;
 import it.ai.montecarlo.phases.Simulation;
-import it.ai.montecarlo.strategies.bestaction.MaxChildStrategy;
+import it.ai.montecarlo.phases.*;
 import it.ai.montecarlo.strategies.bestaction.MonteCarloBestActionStrategy;
+import it.ai.montecarlo.strategies.bestaction.RobustChildStrategy;
+import it.ai.montecarlo.strategies.qvalue.DynamicAlpha;
 import it.ai.montecarlo.strategies.qvalue.HeuristicQValue;
 import it.ai.montecarlo.strategies.qvalue.IncreasingAlpha;
 import it.ai.montecarlo.strategies.qvalue.QEvaluation;
@@ -73,7 +73,9 @@ public class Main {
         String team = playerTeam == Constants.Player.BLACK ? Turn.BLACK : Turn.WHITE;
         int timeout_s = 55;
 
-        double alpha = 0.4;
+//        double alpha = 0.4;
+        DynamicAlpha alpha = new IncreasingAlpha();
+//        DynamicAlpha alpha = new HeuristicQValue.ConstAlpha(0.4);
         double exploration = 1.4;
 //        double networkThreshold = 0.6;
 
@@ -81,43 +83,31 @@ public class Main {
 //        String whiteNN = "value_model_b_1.h5";
 
         Game game = new AshtonTablutGame(0);
-        MonteCarloBestActionStrategy bestActionStrategy = new MaxChildStrategy();
+//        MonteCarloBestActionStrategy bestActionStrategy = new MaxChildStrategy();
+        MonteCarloBestActionStrategy bestActionStrategy = new RobustChildStrategy();
         RewardStrategy rewardStrategy = new DefaultRewardStrategy();
 
 //        QEvaluation qEvaluation = new WinProbabilityQValue();
-        QEvaluation qEvaluation = new HeuristicQValue(new IncreasingAlpha());
+        QEvaluation qEvaluation = new HeuristicQValue(alpha);
         MonteCarloSelectionScoreStrategy selectionScoreStrategy = new Ucb1SelectionScoreStrategy(exploration, qEvaluation);
 
         HeuristicEvaluation heuristicEvaluation = buildHeuristic(playerTeam);
 
         MCTSMinMax minMax = new MCTSMinMax(game, rewardStrategy, heuristicEvaluation, playerTeam);
         Selection selection = new Selection(selectionScoreStrategy);
+//        Expansion expansion = new Expansion(game);
         Expansion expansion = minMax.getExpansion();
-        Simulation simulation = new Simulation(game);
-        Backpropagation backpropagation = new Backpropagation(game, rewardStrategy);
+//        Simulation simulation = new Simulation(game);
+        Simulation simulation = new ParallelSimulation(game);
+//        Backpropagation backpropagation = new Backpropagation(game, rewardStrategy);
+        Backpropagation backpropagation = minMax.getBackPropagation();
 
-//        AbstractMCTS mctsImpl = new MCTSImpl(game,
-//                new Ucb1SelectionScoreStrategy(exploration, qEvaluation),
-//                new MaxChildStrategy(),
-//                new DefaultRewardStrategy());
-
-//        MCTSMinMax mcts = new MCTSMinMax(game,
-//                selectionScoreStrategy,
-//                bestActionStrategy,
-//                rewardStrategy,
-//                heuristicEvaluation, playerTeam);
 
         IMCTS mcts = new MCTS(game, bestActionStrategy, selection, expansion, simulation, backpropagation);
-//        IMCTS mcts = new MCTSRootParallelization(game, bestActionStrategy,
-//                selection, expansion, simulation, backpropagation);
 
 //        MCTS mcts = new NeuralNetworkMonteCarlo(mctsImpl,
 //                new ValueNeuralNetwork(blackNN), new ValueNeuralNetwork(whiteNN), networkThreshold);
 
-//            MCTS mcts = new MCTSRootParallelization(() -> new MCTSImpl(game,
-//                    new Ucb1SelectionScoreStrategy(2),
-//                    new RobustChildStrategy(),
-//                    new DefaultWinScoreStrategy()), 4);
 
         Agent agent = new MctsAgent(game, mcts, () -> new TimeoutTerminationCondition(timeout_s));
         Player player = new AgentPlayer(playerName, team, agent);
@@ -154,10 +144,14 @@ public class Main {
         });
 
         AggregateHeuristic blackHeuristic = new AggregateHeuristic(new AggregateHeuristic.WeightedHeuristic[]{
-                new AggregateHeuristic.WeightedHeuristic(30, new BlackAlive()),
-                new AggregateHeuristic.WeightedHeuristic(70, new WhiteEaten()),
+                new AggregateHeuristic.WeightedHeuristic(35, new BlackAlive()),
+                new AggregateHeuristic.WeightedHeuristic(48, new WhiteEaten()),
+                new AggregateHeuristic.WeightedHeuristic(15, new BlackSurroundKing()),
+                new AggregateHeuristic.WeightedHeuristic(2, new BlackOnRhombus()),
+
+//                new AggregateHeuristic.WeightedHeuristic(35, new BlackAlive()),
 //                new AggregateHeuristic.WeightedHeuristic(48, new WhiteEaten()),
-//                new AggregateHeuristic.WeightedHeuristic(20, new BlackSurroundKing()),
+//                new AggregateHeuristic.WeightedHeuristic(15, new BlackSurroundKing()),
 //                new AggregateHeuristic.WeightedHeuristic(2, new BlackOnRhombus())
         });
 

@@ -17,7 +17,13 @@ public class Backpropagation {
         this.rewardStrategy = rewardStrategy;
     }
 
-    public void backpropagation(MonteCarloNode node, int winner) {
+    public void run(MonteCarloNode node, Iterable<Integer> winners) {
+        for (int winner : winners) {
+            run(node, winner);
+        }
+    }
+
+    public void run(MonteCarloNode node, int winner) {
         int parentPlayer = game.previousPlayer(winner);
 
         while (node != null) {

@@ -1,10 +1,10 @@
-package it.ai.montecarlo;
+package it.ai.montecarlo.phases;
 
 import it.ai.game.Game;
 import it.ai.game.State;
+import it.ai.montecarlo.MonteCarloNode;
+import it.ai.montecarlo.RewardHelper;
 import it.ai.montecarlo.heuristics.HeuristicEvaluation;
-import it.ai.montecarlo.phases.Backpropagation;
-import it.ai.montecarlo.phases.Expansion;
 import it.ai.montecarlo.strategies.reward.RewardStrategy;
 
 import java.util.Optional;
@@ -38,8 +38,8 @@ public class MCTSMinMax {
         }
 
         @Override
-        public MonteCarloNode expansion(MonteCarloNode node) {
-            node = super.expansion(node);
+        public MonteCarloNode run(MonteCarloNode node) {
+            node = super.run(node);
             node.setHeuristicValue(evaluateState(node));
             return node;
         }
@@ -72,6 +72,7 @@ public class MCTSMinMax {
             Optional<Double> value = node.getState().isPlayerTurn(player)
                     ? values.max(Double::compare)
                     : values.min(Double::compare);
+//            Optional<Double> value = values.min(Double::compare);
             value.ifPresent(node::setHeuristicValue);
         }
     }

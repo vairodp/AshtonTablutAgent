@@ -19,10 +19,10 @@ public class HeuristicQValue implements QEvaluation {
         return (1 - alpha.getValue()) * winRatio + alpha.getValue() * node.getHeuristicValue();
     }
 
-    private static class ConstAlpha implements DynamicAlpha {
+    public static class ConstAlpha implements DynamicAlpha {
         private final double alpha;
 
-        private ConstAlpha(double alpha) {
+        public ConstAlpha(double alpha) {
             this.alpha = alpha;
         }
 

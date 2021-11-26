@@ -1,9 +1,8 @@
-package it.ai.montecarlo;
+package it.ai.montecarlo.phases;
 
 import it.ai.constants.Constants;
 import it.ai.game.Game;
 import it.ai.game.State;
-import it.ai.montecarlo.phases.Simulation;
 import it.ai.neuralnetworks.Outcome;
 import it.ai.neuralnetworks.ValueNeuralNetwork;
 
