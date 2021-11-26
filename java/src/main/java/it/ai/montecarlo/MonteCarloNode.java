@@ -59,11 +59,12 @@ public class MonteCarloNode extends Node<State, Action> {
     public MonteCarloNode expand(Action action, State childState, Iterable<Action> childUnexpandedMoves) {
         Child<State, Action> child = getChild(action);
         if (child == null) throw new RuntimeException("No such action!");
-        if (child.getNode() != null) throw new RuntimeException("Node already expanded!");
-
-        MonteCarloNode childNode = new MonteCarloNode(this, action, childState, childUnexpandedMoves);
-        addChild(childNode);
-        nodeToExpand--;
+        MonteCarloNode childNode = (MonteCarloNode) child.getNode();
+        if (childNode == null) {
+            childNode = new MonteCarloNode(this, action, childState, childUnexpandedMoves);
+            addChild(childNode);
+            nodeToExpand--;
+        }
 
         return childNode;
     }

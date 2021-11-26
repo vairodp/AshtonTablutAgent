@@ -12,7 +12,6 @@ public class AggregateHeuristic implements HeuristicEvaluation {
 
     @Override
     public double evaluate(State state, int player) {
-        //TODO refine
         double value = 0;
         for (WeightedHeuristic weightedHeuristic : heuristics) {
             value += weightedHeuristic.weight * weightedHeuristic.heuristic.evaluate(state, player);

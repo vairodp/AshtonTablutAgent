@@ -3,34 +3,76 @@ package it.ai.montecarlo;
 import it.ai.game.Game;
 import it.ai.game.State;
 import it.ai.montecarlo.heuristics.HeuristicEvaluation;
-import it.ai.montecarlo.strategies.bestaction.MonteCarloBestActionStrategy;
+import it.ai.montecarlo.phases.Backpropagation;
+import it.ai.montecarlo.phases.Expansion;
 import it.ai.montecarlo.strategies.reward.RewardStrategy;
-import it.ai.montecarlo.strategies.selection.MonteCarloSelectionScoreStrategy;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 
-public class MCTSMinMax extends MCTSImpl {
+public class MCTSMinMax {
+    private final Game game;
+    private final RewardStrategy rewardStrategy;
     private final HeuristicEvaluation heuristic;
+    private final int player;
 
-    public MCTSMinMax(Game game, MonteCarloSelectionScoreStrategy selectionScoreStrategy, MonteCarloBestActionStrategy bestActionStrategy, RewardStrategy rewardStrategy, HeuristicEvaluation heuristic) {
-        super(game, selectionScoreStrategy, bestActionStrategy, rewardStrategy);
+    public MCTSMinMax(Game game, RewardStrategy rewardStrategy, HeuristicEvaluation heuristic, int player) {
+        this.game = game;
+        this.rewardStrategy = rewardStrategy;
         this.heuristic = heuristic;
+        this.player = player;
     }
 
-    @Override
-    protected double evaluate(MonteCarloNode node) {
-        State state = node.getState();
-        int parentPlayer = game.previousPlayer(state.getTurn());
-        Optional<Integer> winner = game.getWinner(state);
-        if (winner.isPresent()) {
-            return getReward(node, winner.get(), parentPlayer);
+    public MinMaxExpansion getExpansion() {
+        return new MinMaxExpansion();
+    }
+
+    public MinMaxBackPropagation getBackPropagation() {
+        return new MinMaxBackPropagation();
+    }
+
+    public class MinMaxExpansion extends Expansion {
+
+        public MinMaxExpansion() {
+            super(MCTSMinMax.this.game);
         }
-        return heuristic.evaluate(state, parentPlayer);
+
+        @Override
+        public MonteCarloNode expansion(MonteCarloNode node) {
+            node = super.expansion(node);
+            node.setHeuristicValue(evaluateState(node));
+            return node;
+        }
+
+        private double evaluateState(MonteCarloNode node) {
+            State state = node.getState();
+            int parentPlayer = game.previousPlayer(state.getTurn());
+            Optional<Integer> winner = game.getWinner(state);
+
+            return winner.map(winnerPlayer -> RewardHelper.getReward(rewardStrategy, node, winnerPlayer, parentPlayer))
+                    .orElseGet(() -> heuristic.evaluate(state, parentPlayer));
+        }
     }
 
-    @Override
-    protected void updateHeuristicValue(MonteCarloNode node, int parentPlayer) {
-        Optional<Double> value = node.getExpandedNodes().map(MonteCarloNode::getHeuristicValue).min(Double::compare);
-        value.ifPresent(node::setHeuristicValue);
+    public class MinMaxBackPropagation extends Backpropagation {
+
+        public MinMaxBackPropagation() {
+            super(MCTSMinMax.this.game, MCTSMinMax.this.rewardStrategy);
+        }
+
+        @Override
+        protected void update(MonteCarloNode node, int winner, int parentPlayer) {
+            super.update(node, winner, parentPlayer);
+            updateHeuristicValue(node);
+        }
+
+
+        private void updateHeuristicValue(MonteCarloNode node) {
+            Stream<Double> values = node.getExpandedNodes().map(MonteCarloNode::getHeuristicValue);
+            Optional<Double> value = node.getState().isPlayerTurn(player)
+                    ? values.max(Double::compare)
+                    : values.min(Double::compare);
+            value.ifPresent(node::setHeuristicValue);
+        }
     }
 }

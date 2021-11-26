@@ -5,8 +5,6 @@ import it.ai.game.State;
 import it.ai.game.tablut.Action;
 import it.ai.game.tablut.Coords;
 import it.ai.game.tablut.ashton.AshtonTablutGame;
-import it.ai.neuralnetworks.Outcome;
-import it.ai.neuralnetworks.ValueNeuralNetwork;
 
 public class Test {
     public static void main(String[] args) throws Exception {
@@ -32,11 +30,9 @@ public class Test {
 
 //        ValueNeuralNetwork nn = new ValueNeuralNetwork("value_model_b_1.h5");
 //        ValueNeuralNetwork nn = new ValueNeuralNetwork("value_model_b_1");
-        State state = game.nextState(game.start(), new Action(Coords.F5, Coords.F6));
-        state = game.nextState(state, new Action(Coords.F1, Coords.F4));
+        State state = game.nextState(game.start(), new Action(Coords.C5, Coords.fromString("C6")));
+        state = game.nextState(state, new Action(Coords.B5, Coords.C5));
         state = game.nextState(state, new Action(Coords.E5, Coords.F5));
-        state = game.nextState(state, new Action(Coords.F4, Coords.F1));
-        state = game.nextState(state, new Action(Coords.F5, Coords.E5));
 
 //        Outcome outcome = nn.predict(state);
 //        System.out.println(outcome);

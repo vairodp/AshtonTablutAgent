@@ -1,30 +1,31 @@
 package it.ai.montecarlo;
 
-import it.ai.Main;
 import it.ai.constants.Constants;
+import it.ai.game.Game;
 import it.ai.game.State;
+import it.ai.montecarlo.phases.Simulation;
 import it.ai.neuralnetworks.Outcome;
 import it.ai.neuralnetworks.ValueNeuralNetwork;
 
 import java.util.Optional;
 import java.util.logging.Logger;
 
-public class NeuralNetworkMonteCarlo extends MCTSDecorator {
-    Logger logger = Logger.getLogger(NeuralNetworkMonteCarlo.class.getName());
+public class NeuralNetworkSimulation extends Simulation {
+    Logger logger = Logger.getLogger(NeuralNetworkSimulation.class.getName());
 
     private final ValueNeuralNetwork blackNetwork;
     private final ValueNeuralNetwork whiteNetwork;
     private final double threshold;
 
-    public NeuralNetworkMonteCarlo(AbstractMCTS mcts, ValueNeuralNetwork blackNetwork, ValueNeuralNetwork whiteNetwork, double threshold) {
-        super(mcts);
+    public NeuralNetworkSimulation(Game game, ValueNeuralNetwork blackNetwork, ValueNeuralNetwork whiteNetwork, double threshold) {
+        super(game);
         this.blackNetwork = blackNetwork;
         this.whiteNetwork = whiteNetwork;
         this.threshold = threshold;
     }
 
     @Override
-    protected Optional<Integer> evaluateWinner(State state) {
+    protected Optional<Integer> estimateWinner(State state) {
         Outcome outcome = state.isPlayerTurn(Constants.Player.WHITE)
                 ? whiteNetwork.predict(state)
                 : blackNetwork.predict(state);
@@ -34,7 +35,7 @@ public class NeuralNetworkMonteCarlo extends MCTSDecorator {
             return Optional.of(outcome.getWinner());
         }
 
-        return super.evaluateWinner(state);
+        return super.estimateWinner(state);
     }
 }
 

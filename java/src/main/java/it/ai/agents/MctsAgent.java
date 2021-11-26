@@ -3,7 +3,7 @@ package it.ai.agents;
 import it.ai.game.Action;
 import it.ai.game.Game;
 import it.ai.game.State;
-import it.ai.montecarlo.MCTS;
+import it.ai.montecarlo.IMCTS;
 import it.ai.montecarlo.MonteCarloStats;
 import it.ai.montecarlo.termination.TerminationCondition;
 import lombok.Getter;
@@ -22,10 +22,10 @@ public class MctsAgent implements Agent {
     private final List<Action> actions;
     private final Game game;
     Supplier<TerminationCondition> terminationConditionFactory;
-    private final MCTS mcts;
+    private final IMCTS mcts;
     private State rootState;
 
-    public MctsAgent(Game game, MCTS mcts, Supplier<TerminationCondition> terminationConditionFactory) {
+    public MctsAgent(Game game, IMCTS mcts, Supplier<TerminationCondition> terminationConditionFactory) {
         this.game = game;
         this.terminationConditionFactory = terminationConditionFactory;
         this.mcts = mcts;
