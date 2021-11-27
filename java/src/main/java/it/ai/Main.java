@@ -57,8 +57,7 @@ public class Main {
         ArgumentParser parser = ArgumentParsers.newFor("taboletta.sh").build()
                 .defaultHelp(true);
         parser.addArgument("player")
-                .choices("WHITE", "BLACK")
-                .nargs(1);
+                .choices("WHITE", "BLACK");
         parser.addArgument("-t", "--timeout")
                 .type(Integer.class)
                 .help("Timeout in seconds")
@@ -73,6 +72,7 @@ public class Main {
         Namespace res;
         try {
             res = parser.parseArgs(args);
+            System.out.println(res);
             playerTeam = res.getString("player").equals("WHITE") ? Constants.Player.WHITE : Constants.Player.BLACK;
             name = res.getString("name");
             timeout_s = res.getInt("timeout");
