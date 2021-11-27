@@ -32,7 +32,7 @@ sudo apt install openjdk-11-jdk -y
 ./taboletta.sh {WHITE,BLACK} [-h] [-t TIMEOUT] [-s SERVER_IP] [-n NAME] [--debug] 
 ```
 
-### Examples
+### Instances
 ```
 ./taboletta.sh BLACK -t 60 -s localhost
 ./taboletta.sh WHITE -t 60 -s localhost
@@ -40,7 +40,7 @@ sudo apt install openjdk-11-jdk -y
 
 
 ## Group members
-> The name of group enrolled in the Tablut Students Challenge 2020 that presented this project is **_Taboletta_**.
+> The name of group enrolled in the Tablut Students Challenge 2021 that presented this project is **_Taboletta_**.
 
 | Name              | Email                       |                    Username                   |
 |-------------------|-----------------------------|:---------------------------------------------:|
