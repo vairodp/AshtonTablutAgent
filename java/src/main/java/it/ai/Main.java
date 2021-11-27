@@ -11,10 +11,7 @@ import it.ai.montecarlo.IMCTS;
 import it.ai.montecarlo.MCTS;
 import it.ai.montecarlo.heuristics.AggregateHeuristic;
 import it.ai.montecarlo.heuristics.HeuristicEvaluation;
-import it.ai.montecarlo.heuristics.black.BlackAlive;
-import it.ai.montecarlo.heuristics.black.BlackSurroundKing;
-import it.ai.montecarlo.heuristics.black.BlockedKingEscapes;
-import it.ai.montecarlo.heuristics.black.WhiteEaten;
+import it.ai.montecarlo.heuristics.black.*;
 import it.ai.montecarlo.heuristics.white.*;
 import it.ai.montecarlo.phases.Simulation;
 import it.ai.montecarlo.phases.*;
@@ -48,7 +45,7 @@ public class Main {
 
     private static int playerTeam = -1;
     private static String name = "taboletta";
-    private static int timeout_s = 55;
+    private static int timeout_s = 60;
     private static String serverIp = "localhost";
     private static boolean debug = false;
 
@@ -101,7 +98,7 @@ public class Main {
         String team = playerTeam == Constants.Player.BLACK ? Turn.BLACK : Turn.WHITE;
 
 //        DynamicAlpha alpha = new IncreasingAlpha();
-        DynamicAlpha alpha = new HeuristicQValue.ConstAlpha(0.6);
+        DynamicAlpha alpha = new HeuristicQValue.ConstAlpha(0.7);
         double exploration = 1.4;
 
         Game game = new AshtonTablutGame(0);
@@ -126,6 +123,7 @@ public class Main {
 //        Simulation baseSimulation =
 //                new HeuristicSimulation(game, blackAndWhiteHeuristic, rewardStrategy, actionsToEvaluate);
         Simulation simulation = new ParallelSimulation(game);
+//        Simulation simulation = new FakeSimulation(game);
 //        Backpropagation backpropagation = new Backpropagation(game, rewardStrategy);
         Backpropagation backpropagation = minMax.getBackPropagation();
 
@@ -136,7 +134,7 @@ public class Main {
 //                new ValueNeuralNetwork(blackNN), new ValueNeuralNetwork(whiteNN), networkThreshold);
 
 
-        Agent agent = new MctsAgent(game, mcts, () -> new TimeoutTerminationCondition(timeout_s - 2));
+        Agent agent = new MctsAgent(game, mcts, () -> new TimeoutTerminationCondition(timeout_s - 3));
         Player player = new AgentPlayer(name, team, agent);
 
         Mapper mapper = new AshtonMapper();
@@ -187,12 +185,12 @@ public class Main {
 
     private static HeuristicEvaluation getWhiteHeuristic() {
         return new AggregateHeuristic(new AggregateHeuristic.WeightedHeuristic[]{
-                new AggregateHeuristic.WeightedHeuristic(5, new WhiteWellPositioned()),
-                new AggregateHeuristic.WeightedHeuristic(27, new BlackEaten()),
-                new AggregateHeuristic.WeightedHeuristic(35, new WhiteAlive()),
-                new AggregateHeuristic.WeightedHeuristic(26, new KingEscapes()),
-                new AggregateHeuristic.WeightedHeuristic(7, new RemainingToSurroundKing()),
-//                new AggregateHeuristic.WeightedHeuristic(18, new KingProtection()),
+                new AggregateHeuristic.WeightedHeuristic(8, new WhiteWellPositioned()),
+                new AggregateHeuristic.WeightedHeuristic(7, new BlackEaten()),
+                new AggregateHeuristic.WeightedHeuristic(40, new WhiteAlive()),
+                new AggregateHeuristic.WeightedHeuristic(20, new KingEscapes()),
+                new AggregateHeuristic.WeightedHeuristic(15, new RemainingToSurroundKing()),
+                new AggregateHeuristic.WeightedHeuristic(10, new KingProtection()),
 
 //                new AggregateHeuristic.WeightedHeuristic(2, new WhiteWellPositioned()),
 //                new AggregateHeuristic.WeightedHeuristic(20, new BlackEaten()),
