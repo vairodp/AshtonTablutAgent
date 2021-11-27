@@ -40,7 +40,7 @@ public class Backpropagation {
     }
 
     private void updateReward(MonteCarloNode node, int winner, int parentPlayer) {
-        double reward = RewardHelper.getReward(rewardStrategy, node, winner, parentPlayer);
+        double reward = RewardHelper.getReward(rewardStrategy, node.getState(), winner, parentPlayer);
         node.addReward(reward);
     }
 

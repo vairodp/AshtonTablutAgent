@@ -19,13 +19,14 @@ public class AggregateHeuristic implements HeuristicEvaluation {
 //            value += getValue(state, player, weightedHeuristic);
 //        }
 //        return value;
-        return Arrays.stream(heuristics).parallel()
+        double value = Arrays.stream(heuristics).parallel()
                 .map(weightedHeuristic -> getValue(state, player, weightedHeuristic))
                 .reduce(0.0, Double::sum);
+        return value / 100;
     }
 
     private double getValue(State state, int player, WeightedHeuristic weightedHeuristic) {
-        return weightedHeuristic.weight * weightedHeuristic.heuristic.evaluate(state, player) / 100;
+        return weightedHeuristic.weight * weightedHeuristic.heuristic.evaluate(state, player);
     }
 
     public static class WeightedHeuristic {

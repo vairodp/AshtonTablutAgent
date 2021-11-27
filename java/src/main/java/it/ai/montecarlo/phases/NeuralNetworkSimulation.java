@@ -9,7 +9,7 @@ import it.ai.neuralnetworks.ValueNeuralNetwork;
 import java.util.Optional;
 import java.util.logging.Logger;
 
-public class NeuralNetworkSimulation extends Simulation {
+public class NeuralNetworkSimulation extends SimpleSimulation {
     Logger logger = Logger.getLogger(NeuralNetworkSimulation.class.getName());
 
     private final ValueNeuralNetwork blackNetwork;
@@ -24,7 +24,7 @@ public class NeuralNetworkSimulation extends Simulation {
     }
 
     @Override
-    protected Optional<Integer> estimateWinner(State state) {
+    public Optional<Integer> estimateWinner(State state) {
         Outcome outcome = state.isPlayerTurn(Constants.Player.WHITE)
                 ? whiteNetwork.predict(state)
                 : blackNetwork.predict(state);

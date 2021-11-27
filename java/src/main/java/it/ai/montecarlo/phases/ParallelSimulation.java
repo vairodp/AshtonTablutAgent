@@ -1,7 +1,6 @@
 package it.ai.montecarlo.phases;
 
 import it.ai.collections.Iterables;
-import it.ai.game.Game;
 import it.ai.montecarlo.MonteCarloNode;
 import lombok.SneakyThrows;
 
@@ -10,42 +9,24 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class ParallelSimulation extends Simulation {
+public class ParallelSimulation extends SimulationDecorator {
     private final int numberOfCores;
     private final CompletionService<Integer> executorCompletionService;
 
-    public ParallelSimulation(Game game, int numberOfCores) {
-        super(game);
+    public ParallelSimulation(Simulation simulation, int numberOfCores) {
+        super(simulation);
         this.numberOfCores = numberOfCores;
         ExecutorService threadPool = Executors.newWorkStealingPool(numberOfCores);
         this.executorCompletionService = new ExecutorCompletionService<>(threadPool);
     }
 
-    public ParallelSimulation(Game game) {
-        this(game, Runtime.getRuntime().availableProcessors());
+    public ParallelSimulation(Simulation simulation) {
+        this(simulation, Runtime.getRuntime().availableProcessors());
     }
 
     @SneakyThrows
     @Override
     public Iterable<Integer> run(MonteCarloNode node) {
-//        for (int i = 0; i < numberOfCores; i++) {
-//            executorCompletionService.submit(() -> super.runSingle(node));
-//        }
-//        return () -> new Iterator<>() {
-//            int i = 0;
-//
-//            @Override
-//            public boolean hasNext() {
-//                return i < numberOfCores;
-//            }
-//
-//            @SneakyThrows
-//            @Override
-//            public Integer next() {
-//                i++;
-//                return executorCompletionService.take().get();
-//            }
-//        };
         return Iterables.parallel(() -> super.runSingle(node), numberOfCores, executorCompletionService);
     }
 }

@@ -1,9 +1,7 @@
 package it.ai.montecarlo.phases;
 
 import it.ai.game.Game;
-import it.ai.game.State;
 import it.ai.montecarlo.MonteCarloNode;
-import it.ai.montecarlo.RewardHelper;
 import it.ai.montecarlo.heuristics.HeuristicEvaluation;
 import it.ai.montecarlo.strategies.reward.RewardStrategy;
 
@@ -40,17 +38,9 @@ public class MCTSMinMax {
         @Override
         public MonteCarloNode run(MonteCarloNode node) {
             node = super.run(node);
-            node.setHeuristicValue(evaluateState(node));
+            double value = StateEvaluationHelper.evaluateState(game, rewardStrategy, heuristic, node.getState());
+            node.setHeuristicValue(value);
             return node;
-        }
-
-        private double evaluateState(MonteCarloNode node) {
-            State state = node.getState();
-            int parentPlayer = game.previousPlayer(state.getTurn());
-            Optional<Integer> winner = game.getWinner(state);
-
-            return winner.map(winnerPlayer -> RewardHelper.getReward(rewardStrategy, node, winnerPlayer, parentPlayer))
-                    .orElseGet(() -> heuristic.evaluate(state, parentPlayer));
         }
     }
 

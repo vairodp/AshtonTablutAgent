@@ -10,6 +10,7 @@ import it.ai.game.tablut.ashton.AshtonTablutGame;
 import it.ai.montecarlo.IMCTS;
 import it.ai.montecarlo.MCTS;
 import it.ai.montecarlo.heuristics.AggregateHeuristic;
+import it.ai.montecarlo.heuristics.BlackAndWhiteHeuristic;
 import it.ai.montecarlo.heuristics.HeuristicEvaluation;
 import it.ai.montecarlo.heuristics.black.BlackAlive;
 import it.ai.montecarlo.heuristics.black.BlackOnRhombus;
@@ -73,6 +74,8 @@ public class Main {
         String team = playerTeam == Constants.Player.BLACK ? Turn.BLACK : Turn.WHITE;
         int timeout_s = 55;
 
+        int actionsToEvaluate = 3;
+
 //        double alpha = 0.4;
         DynamicAlpha alpha = new IncreasingAlpha();
 //        DynamicAlpha alpha = new HeuristicQValue.ConstAlpha(0.4);
@@ -91,14 +94,19 @@ public class Main {
         QEvaluation qEvaluation = new HeuristicQValue(alpha);
         MonteCarloSelectionScoreStrategy selectionScoreStrategy = new Ucb1SelectionScoreStrategy(exploration, qEvaluation);
 
-        HeuristicEvaluation heuristicEvaluation = buildHeuristic(playerTeam);
+        HeuristicEvaluation blackHeuristic = getBlackHeuristic();
+        HeuristicEvaluation whiteHeuristic = getWhiteHeuristic();
+        HeuristicEvaluation heuristic = chooseHeuristic(blackHeuristic, whiteHeuristic, playerTeam);
+        HeuristicEvaluation blackAndWhiteHeuristic = new BlackAndWhiteHeuristic(blackHeuristic, whiteHeuristic);
 
-        MCTSMinMax minMax = new MCTSMinMax(game, rewardStrategy, heuristicEvaluation, playerTeam);
+        MCTSMinMax minMax = new MCTSMinMax(game, rewardStrategy, heuristic, playerTeam);
         Selection selection = new Selection(selectionScoreStrategy);
 //        Expansion expansion = new Expansion(game);
         Expansion expansion = minMax.getExpansion();
-//        Simulation simulation = new Simulation(game);
-        Simulation simulation = new ParallelSimulation(game);
+        Simulation baseSimulation = new SimpleSimulation(game);
+//        Simulation baseSimulation =
+//                new HeuristicSimulation(game, blackAndWhiteHeuristic, rewardStrategy, actionsToEvaluate);
+        Simulation simulation = new ParallelSimulation(baseSimulation);
 //        Backpropagation backpropagation = new Backpropagation(game, rewardStrategy);
         Backpropagation backpropagation = minMax.getBackPropagation();
 
@@ -133,17 +141,18 @@ public class Main {
         }
     }
 
-    private static HeuristicEvaluation buildHeuristic(int player) {
-        AggregateHeuristic whiteHeuristic = new AggregateHeuristic(new AggregateHeuristic.WeightedHeuristic[]{
-                new AggregateHeuristic.WeightedHeuristic(2, new WhiteWellPositioned()),
-                new AggregateHeuristic.WeightedHeuristic(20, new BlackEaten()),
-                new AggregateHeuristic.WeightedHeuristic(35, new WhiteAlive()),
-                new AggregateHeuristic.WeightedHeuristic(18, new KingEscapes()),
-                new AggregateHeuristic.WeightedHeuristic(7, new RemainingToSurroundKing()),
-                new AggregateHeuristic.WeightedHeuristic(18, new KingProtection())
-        });
+    private static HeuristicEvaluation chooseHeuristic(
+            HeuristicEvaluation blackHeuristic, HeuristicEvaluation whiteHeuristic, int player) {
 
-        AggregateHeuristic blackHeuristic = new AggregateHeuristic(new AggregateHeuristic.WeightedHeuristic[]{
+        if (player == Constants.Player.WHITE)
+            return whiteHeuristic;
+        else return blackHeuristic;
+
+//        return new BlackAndWhiteHeuristic(blackHeuristic, whiteHeuristic);
+    }
+
+    private static AggregateHeuristic getBlackHeuristic() {
+        return new AggregateHeuristic(new AggregateHeuristic.WeightedHeuristic[]{
                 new AggregateHeuristic.WeightedHeuristic(35, new BlackAlive()),
                 new AggregateHeuristic.WeightedHeuristic(48, new WhiteEaten()),
                 new AggregateHeuristic.WeightedHeuristic(15, new BlackSurroundKing()),
@@ -154,12 +163,17 @@ public class Main {
 //                new AggregateHeuristic.WeightedHeuristic(15, new BlackSurroundKing()),
 //                new AggregateHeuristic.WeightedHeuristic(2, new BlackOnRhombus())
         });
+    }
 
-        if (player == Constants.Player.WHITE)
-            return whiteHeuristic;
-        else return blackHeuristic;
-
-//        return new BlackAndWhiteHeuristic(blackHeuristic, whiteHeuristic);
+    private static HeuristicEvaluation getWhiteHeuristic() {
+        return new AggregateHeuristic(new AggregateHeuristic.WeightedHeuristic[]{
+                new AggregateHeuristic.WeightedHeuristic(2, new WhiteWellPositioned()),
+                new AggregateHeuristic.WeightedHeuristic(20, new BlackEaten()),
+                new AggregateHeuristic.WeightedHeuristic(35, new WhiteAlive()),
+                new AggregateHeuristic.WeightedHeuristic(18, new KingEscapes()),
+                new AggregateHeuristic.WeightedHeuristic(7, new RemainingToSurroundKing()),
+                new AggregateHeuristic.WeightedHeuristic(18, new KingProtection())
+        });
     }
 
     private static void configureLogger() throws IOException {
