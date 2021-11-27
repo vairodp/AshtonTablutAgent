@@ -100,4 +100,13 @@ public final class Coords implements it.ai.game.Coords, Serializable {
     public Coords right() {
         return new Coords(row, column + 1);
     }
+
+    public static Coords[] surroundingPositions(Coords position) {
+        return new Coords[]{
+                position.top(),
+                position.bottom(),
+                position.left(),
+                position.right()
+        };
+    }
 }

@@ -8,7 +8,7 @@ public class DefaultRewardStrategy implements RewardStrategy {
 
     @Override
     public double drawReward() {
-        return 0.4;
+        return 0.5;
     }
 
     @Override

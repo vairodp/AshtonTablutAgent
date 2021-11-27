@@ -8,6 +8,7 @@ import it.ai.game.Game;
 import it.ai.game.State;
 import it.ai.game.tablut.*;
 import lombok.Getter;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,9 +37,9 @@ public class AshtonTablutGame implements Game {
     }
 
 
-    //    /***
-//     * Return all the possible actions from the given state.
-//     */
+    /***
+     * Return all the possible actions from the given state.
+     */
     @Override
     public List<it.ai.game.Action> getValidActions(State _state) {
         TablutState state = (TablutState) _state;
@@ -48,75 +49,31 @@ public class AshtonTablutGame implements Game {
         List<Coords> currentPlayerPawnCells = getPlayerPawnCells(board, state.getTurn());
 
         for (Coords pawnCoords : currentPlayerPawnCells) {
-            Iterable<Iterable<Coords>> directions = getDirectionalCoords(board, pawnCoords);
-
-            for (Iterable<Coords> direction : directions) {
-                for (Coords coords : direction) {
-                    Action action = new Action(pawnCoords, coords);
-                    if (!isValidAction(state, action))
-                        break;
-
-                    validActions.add(action);
-                }
-            }
+            addPawnActions(validActions, state, pawnCoords);
         }
 
         return validActions;
     }
 
-//    public List<it.ai.game.Action> getValidActions(State _state) {
-//        TablutState state = (TablutState) _state;
-//        Board board = state.getBoard();
-//        List<it.ai.game.Action> validActions = new ArrayList<>();
-//
-//        List<Coords> currentPlayerPawnPositions = getPlayerPawnCells(board, state.getTurn());
-//
-//        for (Coords pawnPosition : currentPlayerPawnPositions) {
-//            addValidActionsFromPosition(state, board, validActions, pawnPosition);
-//        }
-//
-//        return validActions;
-//    }
-//
-//    private void addValidActionsFromPosition(TablutState state, Board board, List<it.ai.game.Action> validActions, Coords position) {
-//        int itemsOnTop = position.getRow();
-//        for (int i = 0; i < itemsOnTop; i++) {
-//            Coords coords = position.top();
-//            Action action = new Action(position, coords);
-//            if (!isValidAction(state, action))
-//                break;
-//
-//            validActions.add(action);
-//        }
-//        int itemsOnBottom = board.numberOfRows() - position.getRow() - 1;
-//        for (int i = 0; i < itemsOnBottom; i++) {
-//            Coords coords = position.bottom();
-//            Action action = new Action(position, coords);
-//            if (!isValidAction(state, action))
-//                break;
-//
-//            validActions.add(action);
-//        }
-//        int itemsOnLeft = position.getColumn();
-//        for (int i = 0; i < itemsOnLeft; i++) {
-//            Coords coords = position.left();
-//            Action action = new Action(position, coords);
-//            if (!isValidAction(state, action))
-//                break;
-//
-//            validActions.add(action);
-//        }
-//        int itemsOnRight = board.numberOfColumns() - position.getColumn() - 1;
-//        for (int i = 0; i < itemsOnRight; i++) {
-//            Coords coords = position.right();
-//            Action action = new Action(position, coords);
-//            if (!isValidAction(state, action))
-//                break;
-//
-//            validActions.add(action);
-//        }
-//    }
+    public List<it.ai.game.Action> getPawnActions(TablutState state, Coords pawnCoords) {
+        List<it.ai.game.Action> actions = new ArrayList<>();
+        addPawnActions(actions, state, pawnCoords);
+        return actions;
+    }
 
+    private void addPawnActions(List<it.ai.game.Action> actions, TablutState state, Coords pawnCoords) {
+        Iterable<Iterable<Coords>> directions = getDirectionalCoords(state.getBoard(), pawnCoords);
+
+        for (Iterable<Coords> direction : directions) {
+            for (Coords coords : direction) {
+                Action action = new Action(pawnCoords, coords);
+                if (!isValidAction(state, action))
+                    break;
+
+                actions.add(action);
+            }
+        }
+    }
 
     private boolean noValidActions(TablutState state) {
         Board board = state.getBoard();
@@ -173,80 +130,22 @@ public class AshtonTablutGame implements Game {
      */
     private boolean isValidAction(TablutState state, Action action) {
         Board board = state.getBoard();
-        //controllo se sono fuori dal tabellone
-        //TODO: remove this check
-//        if (action.getFrom().getColumn() > board.numberOfColumns() - 1 || action.getFrom().getRow() > board.numberOfRows() - 1
-//                || action.getTo().getRow() > board.numberOfRows() - 1 || action.getTo().getColumn() > board.numberOfColumns() - 1
-//                || action.getFrom().getColumn() < 0 || action.getFrom().getRow() < 0 || action.getTo().getRow() < 0 || action.getTo().getColumn() < 0) {
-//            return false;
-//        }
+        int fromRow = action.getFrom().getRow();
+        int fromColumn = action.getFrom().getColumn();
+        int toRow = action.getTo().getRow();
+        int toColumn = action.getTo().getColumn();
 
-        //controllo la casella di arrivo
         if (board.get(action.getTo()) != Pawn.EMPTY)
             return false;
 
-        //Mossa che arriva sopra una citadel
         if (board.inCitadels(action.getTo())) {
-            if (board.inCitadels(action.getFrom())) {
-                if (action.getFrom().getRow() == action.getTo().getRow()) {
-                    if (action.getFrom().getColumn() - action.getTo().getColumn() > 5
-                            || action.getFrom().getColumn() - action.getTo().getColumn() < -5)
-                        return false;
-                } else if (action.getFrom().getRow() - action.getTo().getRow() > 5
-                        || action.getFrom().getRow() - action.getTo().getRow() < -5)
-                    return false;
-            } else return false;
+            if (!board.inCitadels(action.getFrom())) return false;
+
+            if (fromRow == toRow && Math.abs(fromColumn - toColumn) > 5) return false;
+            if (fromColumn == toColumn && Math.abs(fromRow - toRow) > 5) return false;
         }
 
-        // TODO: remove
-        //controllo se cerco di stare fermo
-        if (action.getFrom().equals(action.getTo()))
-            return false;
-
-//        // TODO: remove
-//        //controllo se sto muovendo una pedina giusta
-//        if (state.getTurn() == Constants.Player.WHITE && !Pawn.isWhite(board.get(action.getFrom())))
-//            return false;
-
-        if (state.getTurn() == Constants.Player.BLACK && board.get(action.getFrom()) != Pawn.BLACK)
-            return false;
-
-//        // TODO: remove
-//        //controllo di non muovere in diagonale
-//        if (action.getFrom().getRow() != action.getTo().getRow()
-//                && action.getFrom().getColumn() != action.getTo().getColumn())
-//            return false;
-
-        //controllo di non scavalcare pedine
-        if (action.getFrom().getRow() == action.getTo().getRow()) {
-            Iterable<Integer> direction;
-            if (action.getFrom().getColumn() > action.getTo().getColumn()) {
-                direction = Iterables.range(action.getTo().getColumn(), action.getFrom().getColumn());
-            } else direction = Iterables.rangeInclusive(action.getFrom().getColumn() + 1, action.getTo().getColumn());
-
-
-            for (int j : direction) {
-                if (isClimbing(state, action.getFrom().getRow(), j, action))
-                    return false;
-            }
-        } else {
-            Iterable<Integer> direction;
-            if (action.getFrom().getRow() > action.getTo().getRow()) {
-                direction = Iterables.range(action.getTo().getRow(), action.getFrom().getRow());
-            } else direction = Iterables.rangeInclusive(action.getFrom().getRow() + 1, action.getTo().getRow());
-
-
-            for (int i : direction) {
-                if (isClimbing(state, i, action.getFrom().getColumn(), action))
-                    return false;
-            }
-        }
         return true;
-    }
-
-    private boolean isClimbing(TablutState state, int i, int j, Action action) {
-        Board board = state.getBoard();
-        return board.get(i, j) != Pawn.EMPTY || (board.inCitadels(i, j) && !board.inCitadels(action.getFrom()));
     }
 
 
@@ -298,10 +197,24 @@ public class AshtonTablutGame implements Game {
         return Optional.empty();
     }
 
-    private boolean isKingOnEdge(TablutState state) {
+    public boolean isKingNearThrone(TablutState state) {
+        Coords kingPosition = getKingPosition(state);
+        Coords[] surroundingPositions = Coords.surroundingPositions(kingPosition);
+        return ArrayUtils.contains(surroundingPositions, AshtonBoard.THRONE);
+    }
+
+    public boolean isKingOnThrone(TablutState state) {
+        return getKingPosition(state).equals(AshtonBoard.THRONE);
+    }
+
+    public boolean isKingOnEdge(TablutState state) {
         Board board = state.getBoard();
-        Coords kingPosition = board.getPawnCoords(Pawn.KING).iterator().next();
+        Coords kingPosition = getKingPosition(state);
         return board.isOnEdges(kingPosition);
+    }
+
+    public Coords getKingPosition(TablutState state) {
+        return state.getBoard().getPawnCoords(Pawn.KING).iterator().next();
     }
 
     private boolean isADraw(TablutState state) {

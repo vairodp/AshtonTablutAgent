@@ -29,7 +29,7 @@ public class Expansion {
         Action action = RandomUtils.choice(unexpandedActions);
 
         State childState = game.nextState(node.getState(), action);
-        Iterable<Action> childUnexpandedActions = game.getValidActions(childState);
+        List<Action> childUnexpandedActions = game.getValidActions(childState);
 
         return node.expand(action, childState, childUnexpandedActions);
     }

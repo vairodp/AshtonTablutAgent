@@ -13,6 +13,7 @@ import it.ai.montecarlo.termination.TerminationCondition;
 import it.ai.util.MathUtils;
 import lombok.Getter;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -47,7 +48,7 @@ public class MCTS implements IMCTS {
      */
     protected void createRootNode(State state) {
 //        while (rootNode == null || !rootNode.getState().equals(state)) {
-        Iterable<Action> unexpandedActions = game.getValidActions(state);
+        List<Action> unexpandedActions = game.getValidActions(state);
         rootNode = new MonteCarloNode(null, null, state, unexpandedActions);
 //        }
     }

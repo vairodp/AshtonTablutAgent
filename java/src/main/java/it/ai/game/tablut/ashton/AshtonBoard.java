@@ -17,6 +17,8 @@ public class AshtonBoard extends Board {
     public final static int NUM_CITADELS = citadels.size();
     public final static int NUM_ESCAPES = 16;
 
+    public final static Coords THRONE = Coords.E5;
+
     public AshtonBoard() {
         this(initialBoard());
     }
@@ -50,7 +52,7 @@ public class AshtonBoard extends Board {
     public void move(Coords from, Coords to) {
         super.move(from, to);
 
-        if (from.equals(Coords.E5))
+        if (from.equals(THRONE))
             set(from, Pawn.THRONE);
     }
 
