@@ -10,7 +10,7 @@ import it.ai.util.RandomUtils;
 
 import java.util.List;
 
-public class HeuristicSimulation extends SimpleSimulation {
+public class HeuristicSimulation extends Simulation {
     private final HeuristicEvaluation heuristic;
     private final RewardStrategy rewardStrategy;
     private final int actionsToEvaluate;

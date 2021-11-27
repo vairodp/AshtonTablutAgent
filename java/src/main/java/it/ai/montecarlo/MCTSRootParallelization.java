@@ -5,7 +5,7 @@ import it.ai.game.State;
 import it.ai.montecarlo.phases.Backpropagation;
 import it.ai.montecarlo.phases.Expansion;
 import it.ai.montecarlo.phases.Selection;
-import it.ai.montecarlo.phases.SimpleSimulation;
+import it.ai.montecarlo.phases.Simulation;
 import it.ai.montecarlo.strategies.bestaction.MonteCarloBestActionStrategy;
 import it.ai.montecarlo.termination.TerminationCondition;
 import lombok.SneakyThrows;
@@ -24,13 +24,13 @@ public class MCTSRootParallelization extends MCTS {
     private final int numberOfCores;
     private final ExecutorService threadPool;
 
-    public MCTSRootParallelization(Game game, MonteCarloBestActionStrategy bestActionStrategy, Selection selection, Expansion expansion, SimpleSimulation simulation, Backpropagation backpropagation, int numberOfCores) {
+    public MCTSRootParallelization(Game game, MonteCarloBestActionStrategy bestActionStrategy, Selection selection, Expansion expansion, Simulation simulation, Backpropagation backpropagation, int numberOfCores) {
         super(game, bestActionStrategy, selection, expansion, simulation, backpropagation);
         this.numberOfCores = numberOfCores;
         this.threadPool = Executors.newWorkStealingPool(numberOfCores);
     }
 
-    public MCTSRootParallelization(Game game, MonteCarloBestActionStrategy bestActionStrategy, Selection selection, Expansion expansion, SimpleSimulation simulation, Backpropagation backpropagation) {
+    public MCTSRootParallelization(Game game, MonteCarloBestActionStrategy bestActionStrategy, Selection selection, Expansion expansion, Simulation simulation, Backpropagation backpropagation) {
         this(game, bestActionStrategy, selection, expansion, simulation, backpropagation, Runtime.getRuntime().availableProcessors());
     }
 

@@ -15,6 +15,7 @@ import it.ai.montecarlo.heuristics.black.BlackOnRhombus;
 import it.ai.montecarlo.heuristics.black.BlackSurroundKing;
 import it.ai.montecarlo.heuristics.black.WhiteEaten;
 import it.ai.montecarlo.heuristics.white.*;
+import it.ai.montecarlo.phases.Simulation;
 import it.ai.montecarlo.phases.*;
 import it.ai.montecarlo.strategies.bestaction.MaxChildStrategy;
 import it.ai.montecarlo.strategies.bestaction.MonteCarloBestActionStrategy;
@@ -65,7 +66,7 @@ public class Profile {
         MCTSMinMax minMax = new MCTSMinMax(game, rewardStrategy, heuristicEvaluation, playerTeam);
         Selection selection = new Selection(selectionScoreStrategy);
         Expansion expansion = minMax.getExpansion();
-        SimpleSimulation simulation = new SimpleSimulation(game);
+        Simulation simulation = new Simulation(game);
         Backpropagation backpropagation = new Backpropagation(game, rewardStrategy);
 
 //        AbstractMCTS mctsImpl = new MCTSImpl(game,

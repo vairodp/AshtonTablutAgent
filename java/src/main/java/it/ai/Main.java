@@ -103,10 +103,10 @@ public class Main {
         Selection selection = new Selection(selectionScoreStrategy);
 //        Expansion expansion = new Expansion(game);
         Expansion expansion = minMax.getExpansion();
-        Simulation baseSimulation = new SimpleSimulation(game);
+//        Simulation simulation = new it.ai.montecarlo.phases.Simulation(game);
 //        Simulation baseSimulation =
 //                new HeuristicSimulation(game, blackAndWhiteHeuristic, rewardStrategy, actionsToEvaluate);
-        Simulation simulation = new ParallelSimulation(baseSimulation);
+        Simulation simulation = new ParallelSimulation(game);
 //        Backpropagation backpropagation = new Backpropagation(game, rewardStrategy);
         Backpropagation backpropagation = minMax.getBackPropagation();
 

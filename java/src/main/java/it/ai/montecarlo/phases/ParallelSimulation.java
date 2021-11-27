@@ -1,6 +1,7 @@
 package it.ai.montecarlo.phases;
 
 import it.ai.collections.Iterables;
+import it.ai.game.Game;
 import it.ai.montecarlo.MonteCarloNode;
 import lombok.SneakyThrows;
 
@@ -9,19 +10,19 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class ParallelSimulation extends SimulationDecorator {
+public class ParallelSimulation extends Simulation {
     private final int numberOfCores;
     private final CompletionService<Integer> executorCompletionService;
 
-    public ParallelSimulation(Simulation simulation, int numberOfCores) {
-        super(simulation);
+    public ParallelSimulation(Game game, int numberOfCores) {
+        super(game);
         this.numberOfCores = numberOfCores;
         ExecutorService threadPool = Executors.newWorkStealingPool(numberOfCores);
         this.executorCompletionService = new ExecutorCompletionService<>(threadPool);
     }
 
-    public ParallelSimulation(Simulation simulation) {
-        this(simulation, Runtime.getRuntime().availableProcessors());
+    public ParallelSimulation(Game game) {
+        this(game, Runtime.getRuntime().availableProcessors());
     }
 
     @SneakyThrows

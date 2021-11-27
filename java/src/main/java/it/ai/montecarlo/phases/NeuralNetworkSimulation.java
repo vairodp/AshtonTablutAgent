@@ -9,7 +9,7 @@ import it.ai.neuralnetworks.ValueNeuralNetwork;
 import java.util.Optional;
 import java.util.logging.Logger;
 
-public class NeuralNetworkSimulation extends SimpleSimulation {
+public class NeuralNetworkSimulation extends Simulation {
     Logger logger = Logger.getLogger(NeuralNetworkSimulation.class.getName());
 
     private final ValueNeuralNetwork blackNetwork;
